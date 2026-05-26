@@ -4,6 +4,13 @@ Examify is a full-stack web application that helps students prepare for exams th
 
 ---
 
+🚀 Live Demo
+
+
+
+Frontend: 
+Backend API: 
+
 ## 🚀 Features
 
 ### Student Features
@@ -57,4 +64,17 @@ The application uses PostgreSQL to manage:
 - Answers
 
 ---
+📊 Key Highlights
+Fully functional exam system
+Secure authentication with sessions
+Scalable PostgreSQL database design
+Admin-controlled quiz system
+Responsive UI for all devices
 
+
+👨‍💻 Author
+Built by EmmDevX
+Mechatronics Student & Full Stack Developer
+
+📄 License
+This project is for educational purposes.
