@@ -1,4 +1,5 @@
-import pool from "../../lib/db.js";
+import { pool } from "../../lib/db.js";
+import cookie from "cookie";
 
 export default async function handler(req, res) {
   if (req.method !== "GET") {
@@ -6,24 +7,25 @@ export default async function handler(req, res) {
   }
 
   try {
-    // Example: you stored userId in cookie
-    const userId = req.cookies.userId;
+    const cookies = cookie.parse(req.headers.cookie || "");
+    const userId = cookies.userId;
 
     if (!userId) {
       return res.status(401).json({ message: "Not logged in" });
     }
 
-    const user = await pool.query(
-      "SELECT id, email, name FROM users WHERE id = $1",
+    const result = await pool.query(
+      "SELECT id, name, email, role, school FROM users WHERE id = $1",
       [userId]
     );
 
-    if (user.rows.length === 0) {
+    if (result.rows.length === 0) {
       return res.status(401).json({ message: "User not found" });
     }
 
-    res.status(200).json(user.rows[0]);
+    return res.status(200).json(result.rows[0]);
   } catch (err) {
-    res.status(500).json({ message: "Server error" });
+    console.error("ME ERROR:", err);
+    return res.status(500).json({ message: "Server error" });
   }
 }
