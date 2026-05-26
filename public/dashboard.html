@@ -1,0 +1,201 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Dashboard — Examify</title>
+  <link rel="stylesheet" href="./css/style.css" />
+  <link rel="stylesheet" href="./css/toogle.css">
+  <link rel="stylesheet" href="./css/dash.css">  
+</head>
+<body>
+    <!-- MOBILE MENU BUTTON -->
+  <button class="mobile-menu-btn" id="menuBtn">
+    ☰
+  </button>
+
+  <!-- OVERLAY -->
+  <div class="sidebar-overlay" id="overlay"></div>
+<div class="app-shell">
+  <aside class="sidebar" id="sidebar"></aside>
+  <main class="main-content">
+    <div id="content">
+      <div class="loading-center">
+        <div class="spinner"></div>
+        <p>Loading dashboard...</p>
+      </div>
+    </div>
+  </main>
+</div>
+
+<script src="./js/app.js"></script>
+
+<script>
+      /* =========================
+       MOBILE SIDEBAR
+    ========================= */
+
+    const sidebar = document.getElementById("sidebar");
+    const menuBtn = document.getElementById("menuBtn");
+    const overlay = document.getElementById("overlay");
+
+    menuBtn.addEventListener("click", () => {
+      sidebar.classList.toggle("active");
+      overlay.classList.toggle("active");
+    });
+
+    overlay.addEventListener("click", () => {
+      sidebar.classList.remove("active");
+      overlay.classList.remove("active");
+    });
+/* =========================
+   THEME SETUP (BEFORE LOAD)
+========================= */
+const savedTheme = localStorage.getItem('theme');
+if (savedTheme === 'dark') {
+  document.body.classList.add('dark');
+}
+
+/* =========================
+   MAIN APP
+========================= */
+(async () => {
+  const user = await requireAuth();
+  if (!user) return;
+
+  document.getElementById('sidebar').innerHTML =
+    renderSidebar('./dashboard.html', user.role === 'admin');
+
+  let stats;
+  try {
+    stats = await api('/api/dashboard/stats');
+  } catch (e) {
+    document.getElementById('content').innerHTML =
+      `<p style="color:var(--danger)">Failed to load: ${e.message}</p>`;
+    return;
+  }
+
+  document.getElementById('content').innerHTML = `
+    <div class="page-header">
+      <div>
+        <div class="page-title">
+          Welcome back, ${user.name.split(' ')[0]} 👋
+        </div>
+        <div class="page-subtitle">
+          Here's your performance summary
+        </div>
+      </div>
+
+      <div style="display:flex;gap:10px;align-items:center">
+        <button id="themeToggle" class="btn btn-secondary">
+          ${document.body.classList.contains('dark') ? 'Light Mode ☀️' : 'Dark Mode 🌙'}
+        </button>
+
+        <a href="./quizzes.html" class="btn btn-primary">
+          Take a Quiz →
+        </a>
+      </div>
+    </div>
+
+    <div class="grid-4" style="margin-bottom:24px">
+      ${[
+        { label:'Total Attempts', val: stats.total_attempts, color:'var(--text)' },
+        { label:'Average Score', val: stats.avg_score+'%', color:'var(--primary)' },
+        { label:'Best Score', val: stats.best_score+'%', color:'var(--success)' },
+        { label:'This Week', val: stats.weekly_streak, color:'var(--accent)' },
+      ].map(c => `
+        <div class="stat-card">
+          <div style="font-size:12px;color:var(--muted);text-transform:uppercase;letter-spacing:.5px;margin-bottom:8px">
+            ${c.label}
+          </div>
+          <div style="font-size:32px;font-weight:800;color:${c.color}">
+            ${c.val}
+          </div>
+        </div>
+      `).join('')}
+    </div>
+
+    <div class="grid-2">
+      <div class="card">
+        <div style="font-weight:700;margin-bottom:16px">Score by Subject</div>
+
+        ${
+          stats.subject_scores.length
+          ? stats.subject_scores.map(s => `
+            <div style="margin-bottom:14px">
+              <div style="display:flex;justify-content:space-between;font-size:13px;margin-bottom:6px">
+                <span>${s.subject}</span>
+                <span style="font-weight:700;color:var(--primary)">${s.score || 0}%</span>
+              </div>
+              <div class="progress-bar">
+                <div class="progress-fill"
+                  style="width:${s.score || 0}%;
+                  background:${(s.score||0)>=60?'var(--success)':(s.score||0)>=40?'var(--warning)':'var(--danger)'}">
+                </div>
+              </div>
+            </div>
+          `).join('')
+          : '<p style="color:var(--muted);text-align:center;padding:30px 0">Take quizzes to see your subject breakdown</p>'
+        }
+      </div>
+
+      <div class="card">
+        <div style="font-weight:700;margin-bottom:16px">Recent Attempts</div>
+
+        ${
+          stats.recent_attempts.length
+          ? stats.recent_attempts.map(a => {
+              const pct = a.total_questions
+                ? Math.round(a.score / a.total_questions * 100)
+                : 0;
+
+              return `
+                <div style="display:flex;justify-content:space-between;align-items:center;padding:10px 0;border-bottom:1px solid rgba(42,42,106,0.4)">
+                  <div>
+                    <div style="font-size:14px;font-weight:600">${a.title}</div>
+                    <div style="font-size:12px;color:var(--muted)">
+                      ${a.subject || 'General'} · ${new Date(a.completed_at).toLocaleDateString()}
+                    </div>
+                  </div>
+
+                  <a href="/results.html?attempt=${a.id}"
+                     class="badge ${pct>=60?'badge-green':pct>=40?'badge-yellow':'badge-red'}"
+                     style="text-decoration:none">
+                    ${pct}%
+                  </a>
+                </div>
+              `;
+            }).join('')
+          : '<p style="color:var(--muted);text-align:center;padding:30px 0">No attempts yet — take your first quiz!</p>'
+        }
+
+        ${
+          stats.recent_attempts.length
+          ? `<div style="margin-top:14px">
+              <a href="./quizzes.html" style="color:var(--primary);font-size:13px">
+                Browse all quizzes →
+              </a>
+            </div>`
+          : ''
+        }
+      </div>
+    </div>
+  `;
+
+  /* =========================
+     THEME TOGGLE LOGIC
+  ========================= */
+  const btn = document.getElementById('themeToggle');
+
+  btn.addEventListener('click', () => {
+    document.body.classList.toggle('dark');
+
+    const isDark = document.body.classList.contains('dark');
+    localStorage.setItem('theme', isDark ? 'dark' : 'light');
+
+    btn.textContent = isDark ? 'Light Mode ☀️' : 'Dark Mode 🌙';
+  });
+})();
+</script>
+</body>
+</html>

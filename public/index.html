@@ -1,0 +1,275 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+
+    <title>Examify</title>
+
+    <!-- GOOGLE FONT -->
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+
+    <link
+      href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap"
+      rel="stylesheet"
+    />
+
+    <link rel="stylesheet" href="./css/index.css" />
+  </head>
+
+  <body>
+    <!-- NAVBAR -->
+    <nav class="navbar">
+      <div class="logo">
+        <div class="logo-icon">E</div>
+        <span>Examify</span>
+      </div>
+
+      <div class="nav-right">
+        <div id="nav-actions" class="nav-actions">
+          <a href="./sign-in.html" class="btn btn-secondary btn-sm"> Log In </a>
+
+          <a href="./sign-up.html" class="btn btn-primary btn-sm">
+            Get Started
+          </a>
+        </div>
+
+        <!-- THEME TOGGLE -->
+        <button id="theme-toggle" class="theme-toggle">
+          <span id="theme-icon">🌙</span>
+        </button>
+      </div>
+    </nav>
+
+    <!-- HERO -->
+    <main>
+      <section class="hero">
+        <div class="hero-badge">
+          <span class="badge-dot"></span>
+          Nigeria's #1 Exams Prep Platform
+        </div>
+
+        <h1>
+          The Best <br />
+          <span>Exam Guide</span>
+        </h1>
+
+        <p>
+          Prepare for exams with precision. Track your performance, identify
+          weaknesses, and master your subjects with our high-stakes testing
+          platform.
+        </p>
+
+        <a
+          href="./sign-up.html"
+          class="btn btn-primary btn-lg hero-btn"
+          id="cta-btn"
+        >
+          Start Your Training →
+        </a>
+
+        <!-- FEATURES -->
+        <div class="features-grid">
+          <div class="feature-card reveal">
+            <div class="feature-icon">📚</div>
+
+            <h3 class="feature-title">Past Questions</h3>
+
+            <p class="feature-desc">
+              Thousands of real Bowen past questions across all subjects.
+            </p>
+          </div>
+
+          <div class="feature-card reveal">
+            <div class="feature-icon">📊</div>
+
+            <h3 class="feature-title">Score Analytics</h3>
+
+            <p class="feature-desc">
+              Visual charts showing your progress by subject over time.
+            </p>
+          </div>
+
+          <div class="feature-card reveal">
+            <div class="feature-icon">🏆</div>
+
+            <h3 class="feature-title">Leaderboard</h3>
+
+            <p class="feature-desc">
+              Compete with students across Bowen and track your rank.
+            </p>
+          </div>
+
+          <div class="feature-card reveal">
+            <div class="feature-icon">⏱️</div>
+
+            <h3 class="feature-title">Timed Quizzes</h3>
+
+            <p class="feature-desc">
+              Practice under real exam conditions with a countdown timer.
+            </p>
+          </div>
+        </div>
+      </section>
+
+      <!-- TESTIMONIALS -->
+      <section id="testimonials">
+        <div class="section-header reveal">
+          <h2>What Students Say</h2>
+
+          <p>Thousands of students trust Examify to improve their scores.</p>
+        </div>
+
+        <div class="testimonial-container">
+          <div class="testimonial-card reveal">
+            <div class="testimonial-quote">
+              "Examify transformed my exams prep! The real past questions and
+              analytics helped me improve massively."
+            </div>
+
+            <div class="testimonial-user">
+              <div class="testimonial-avatar">A</div>
+
+              <div>
+                <h4>Adedokun Timothy</h4>
+                <p>Mechatronics Student, Bowen University</p>
+              </div>
+            </div>
+          </div>
+
+          <div class="testimonial-card reveal">
+            <div class="testimonial-quote">
+              "The CBT experience felt exactly like the real exam. My speed and
+              confidence improved a lot."
+            </div>
+
+            <div class="testimonial-user">
+              <div class="testimonial-avatar">B</div>
+
+              <div>
+                <h4>Bogunmbe Maurice</h4>
+                <p>MBBS Student, Bowen University</p>
+              </div>
+            </div>
+          </div>
+
+          <div class="testimonial-card reveal">
+            <div class="testimonial-quote">
+              "The leaderboard and streak system kept me motivated every single
+              day."
+            </div>
+
+            <div class="testimonial-user">
+              <div class="testimonial-avatar">F</div>
+
+              <div>
+                <h4>Favour Okeke</h4>
+                <p>UNILAG</p>
+              </div>
+            </div>
+          </div>
+
+          <div class="testimonial-card reveal">
+            <div class="testimonial-quote">
+              "Clean UI, smooth experience and smart recommendations. Best exam
+              prep platform!"
+            </div>
+
+            <div class="testimonial-user">
+              <div class="testimonial-avatar">K</div>
+
+              <div>
+                <h4>Kelvin Musa</h4>
+                <p>Ahmadu Bello University</p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- CTA -->
+      <section class="cta-section reveal">
+        <h2>Start Preparing Smarter Today</h2>
+
+        <p>Join thousands of students already improving with Examify.</p>
+
+        <a href="./sign-up.html" class="btn btn-primary btn-lg">
+          Get Started Free
+        </a>
+      </section>
+
+      <!-- FOOTER -->
+      <footer class="footer">
+        <div class="footer-content">
+          <div class="footer-logo">
+            <div class="logo-icon">E</div>
+            <span>Examify</span>
+          </div>
+
+          <p>Helping students prepare smarter, faster and better.</p>
+
+          <small> © 2026 Built with ❤️ by EmmDevX </small>
+        </div>
+      </footer>
+    </main>
+
+    <!-- JS -->
+    <script>
+      // THEME TOGGLE
+      const toggleBtn = document.getElementById("theme-toggle");
+      const themeIcon = document.getElementById("theme-icon");
+
+      const savedTheme = localStorage.getItem("theme");
+
+      if (savedTheme === "light") {
+        document.body.classList.add("light-mode");
+        themeIcon.textContent = "☀️";
+      }
+
+      toggleBtn.addEventListener("click", () => {
+        document.body.classList.toggle("light-mode");
+
+        const isLight = document.body.classList.contains("light-mode");
+
+        themeIcon.textContent = isLight ? "☀️" : "🌙";
+
+        localStorage.setItem("theme", isLight ? "light" : "dark");
+      });
+
+      // SCROLL REVEAL
+      const reveals = document.querySelectorAll(".reveal");
+
+      function revealOnScroll() {
+        const windowHeight = window.innerHeight;
+
+        reveals.forEach((el) => {
+          const top = el.getBoundingClientRect().top;
+
+          if (top < windowHeight - 100) {
+            el.classList.add("active");
+          }
+        });
+      }
+
+      window.addEventListener("scroll", revealOnScroll);
+
+      revealOnScroll();
+
+      // NAVBAR EFFECT
+      const navbar = document.querySelector(".navbar");
+
+      window.addEventListener("scroll", () => {
+        if (window.scrollY > 20) {
+          navbar.style.padding = "14px 40px";
+
+          navbar.style.boxShadow = "0 10px 30px rgba(0,0,0,0.15)";
+        } else {
+          navbar.style.padding = "18px 40px";
+
+          navbar.style.boxShadow = "none";
+        }
+      });
+    </script>
+  </body>
+</html>

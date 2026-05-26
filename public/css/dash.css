@@ -1,0 +1,551 @@
+
+
+
+/* =========================================================
+   RESPONSIVE DASHBOARD LAYOUT — EXAMIFY
+   Replace ALL your old responsive/sidebar CSS with this
+========================================================= */
+
+/* =========================
+   BASE LAYOUT
+========================= */
+
+.app-shell {
+  display: flex;
+  min-height: 100vh;
+}
+
+.sidebar {
+  width: 260px;
+
+  border-right: 1px solid var(--border);
+
+  position: fixed;
+  top: 0;
+  left: 0;
+  bottom: 0;
+
+  z-index: 1000;
+
+  display: flex;
+  flex-direction: column;
+
+  overflow-y: auto;
+
+  transition:
+    transform 0.3s ease,
+    width 0.3s ease;
+}
+
+.main-content {
+  flex: 1;
+  margin-left: 260px;
+  padding: 32px;
+  min-height: 100vh;
+
+  transition:
+    margin-left 0.3s ease,
+    padding 0.3s ease;
+}
+
+/* =========================
+   SCROLLBAR
+========================= */
+
+.sidebar::-webkit-scrollbar {
+  width: 6px;
+}
+
+.sidebar::-webkit-scrollbar-thumb {
+  background: var(--border);
+  border-radius: 20px;
+}
+
+/* =========================
+   LARGE LAPTOPS
+========================= */
+
+@media (max-width: 1400px) {
+  .grid-4 {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+/* =========================
+   TABLETS
+========================= */
+
+@media (max-width: 1024px) {
+
+  .sidebar {
+    width: 220px;
+  }
+
+  .main-content {
+    margin-left: 220px;
+    padding: 24px;
+  }
+
+  .grid-4 {
+    grid-template-columns: repeat(2, 1fr);
+  }
+
+  .grid-3 {
+    grid-template-columns: repeat(2, 1fr);
+  }
+
+  .page-title {
+    font-size: 22px;
+  }
+
+  .card,
+  .stat-card {
+    padding: 20px;
+  }
+}
+
+/* =========================
+   MOBILE NAV TOGGLE BUTTON
+========================= */
+
+.mobile-menu-btn {
+  display: none;
+
+  position: fixed;
+  top: 16px;
+  left: 16px;
+
+  width: 46px;
+  height: 46px;
+
+  border: 1px solid var(--border);
+  border-radius: 10px;
+
+  background: var(--card);
+
+  color: var(--text);
+
+  z-index: 1200;
+
+  cursor: pointer;
+}
+
+/* =========================
+   MOBILE & SMALL TABLETS
+========================= */
+
+@media (max-width: 768px) {
+
+  body {
+    overflow-x: hidden;
+  }
+
+  /* Sidebar hidden by default */
+  .sidebar {
+    width: 260px;
+
+    transform: translateX(-100%);
+
+    box-shadow: 0 0 40px rgba(0,0,0,0.4);
+  }
+
+  /* Active sidebar */
+  .sidebar.active {
+    transform: translateX(0);
+  }
+
+  /* Main content full width */
+  .main-content {
+    margin-left: 0;
+    padding: 80px 18px 20px;
+    width: 100%;
+  }
+
+  /* Show menu button */
+  .mobile-menu-btn {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  /* Overlay */
+  .sidebar-overlay {
+    position: fixed;
+    inset: 0;
+
+    background: rgba(0,0,0,0.55);
+
+    opacity: 0;
+    visibility: hidden;
+
+    transition: 0.3s ease;
+
+    z-index: 900;
+  }
+
+  .sidebar-overlay.active {
+    opacity: 1;
+    visibility: visible;
+  }
+
+  /* Grids */
+  .grid-2,
+  .grid-3,
+  .grid-4 {
+    grid-template-columns: 1fr;
+    gap: 16px;
+  }
+
+  /* Header stacking */
+  .page-header {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 16px;
+  }
+
+  /* Button responsiveness */
+  .page-header > div:last-child {
+    width: 100%;
+    flex-wrap: wrap;
+  }
+
+  .btn {
+    width: 100%;
+    justify-content: center;
+  }
+
+  /* Typography */
+  .page-title {
+    font-size: 20px;
+  }
+
+  .page-subtitle {
+    font-size: 13px;
+  }
+
+  /* Cards */
+  .card,
+  .stat-card {
+    padding: 18px;
+  }
+
+  /* Tables */
+  table {
+    display: block;
+    overflow-x: auto;
+    white-space: nowrap;
+  }
+
+  /* Forms */
+  input,
+  select,
+  textarea {
+    font-size: 16px;
+  }
+
+  /* Hero */
+  .hero {
+    padding: 100px 20px 60px;
+  }
+
+  .hero h1 {
+    font-size: 42px;
+  }
+
+  .hero p {
+    font-size: 16px;
+  }
+
+  /* Navbar */
+  .navbar {
+    padding: 14px 18px;
+  }
+
+  /* Testimonials */
+  #testimonials {
+    padding: 70px 20px;
+  }
+
+  .testimonial-container {
+    gap: 18px;
+  }
+}
+
+/* =========================
+   SMALL PHONES
+========================= */
+
+@media (max-width: 480px) {
+
+  .main-content {
+    padding: 76px 14px 16px;
+  }
+
+  .sidebar {
+    width: 240px;
+  }
+
+  .page-title {
+    font-size: 18px;
+  }
+
+  .page-subtitle {
+    font-size: 12px;
+  }
+
+  .card,
+  .stat-card {
+    padding: 16px;
+    border-radius: 10px;
+  }
+
+  .btn {
+    font-size: 13px;
+    padding: 12px;
+  }
+
+  .hero h1 {
+    font-size: 34px;
+  }
+
+  .hero p {
+    font-size: 14px;
+  }
+
+  .testimonial-card {
+    padding: 20px;
+  }
+
+  .modal {
+    padding: 20px;
+    border-radius: 12px;
+  }
+
+  .score-circle {
+    width: 100px;
+    height: 100px;
+    font-size: 24px;
+  }
+}
+
+/* =========================
+   EXTRA SMALL DEVICES
+========================= */
+
+@media (max-width: 360px) {
+
+  .main-content {
+    padding: 72px 12px 14px;
+  }
+
+  .page-title {
+    font-size: 16px;
+  }
+
+  .card,
+  .stat-card {
+    padding: 14px;
+  }
+
+  .sidebar {
+    width: 220px;
+  }
+}
+
+/* ======================================================
+   RESPONSIVE SIDEBAR + MOBILE LAYOUT
+====================================================== */
+
+/* DESKTOP */
+.sidebar {
+  width: 260px;
+
+  position: fixed;
+  top: 0;
+  left: 0;
+  bottom: 0;
+
+  overflow-y: auto;
+
+  z-index: 1000;
+
+  transition: transform 0.3s ease;
+}
+
+.main-content {
+  margin-left: 260px;
+  min-height: 100vh;
+
+  transition: margin-left 0.3s ease;
+}
+
+/* HIDE MOBILE BUTTON */
+.mobile-menu-btn {
+  display: none;
+}
+
+.sidebar-overlay {
+  display: none;
+}
+
+/* =========================================
+   TABLET
+========================================= */
+
+@media (max-width: 1024px) {
+
+  .sidebar {
+    width: 220px;
+  }
+
+  .main-content {
+    margin-left: 220px;
+    padding: 24px;
+  }
+
+  .grid-4 {
+    grid-template-columns: repeat(2, 1fr);
+  }
+
+  .grid-3 {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+/* =========================================
+   MOBILE
+========================================= */
+
+@media (max-width: 768px) {
+
+  body {
+    overflow-x: hidden;
+  }
+
+  /* SIDEBAR */
+  .sidebar {
+    width: 260px;
+
+    transform: translateX(-100%);
+
+    box-shadow: 0 0 40px rgba(0,0,0,0.4);
+  }
+
+  /* OPEN SIDEBAR */
+  .sidebar.active {
+    transform: translateX(0);
+  }
+
+  /* CONTENT */
+  .main-content {
+    margin-left: 0;
+    width: 100%;
+
+    padding: 80px 18px 20px;
+  }
+
+  /* MENU BUTTON */
+  .mobile-menu-btn {
+    display: flex;
+
+    align-items: center;
+    justify-content: center;
+
+    position: fixed;
+    top: 16px;
+    left: 16px;
+
+    width: 48px;
+    height: 48px;
+
+    border: 1px solid var(--border);
+    border-radius: 12px;
+
+    background: var(--card);
+    color: var(--text);
+
+    font-size: 22px;
+
+    cursor: pointer;
+
+    z-index: 1200;
+  }
+
+  /* OVERLAY */
+  .sidebar-overlay {
+    display: block;
+
+    position: fixed;
+    inset: 0;
+
+    background: rgba(0,0,0,0.55);
+
+    opacity: 0;
+    visibility: hidden;
+
+    transition: 0.3s ease;
+
+    z-index: 900;
+  }
+
+  .sidebar-overlay.active {
+    opacity: 1;
+    visibility: visible;
+  }
+
+  /* RESPONSIVE GRIDS */
+  .grid-2,
+  .grid-3,
+  .grid-4 {
+    grid-template-columns: 1fr;
+  }
+
+  /* PAGE HEADER */
+  .page-header {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 16px;
+  }
+
+  /* BUTTONS */
+  .btn {
+    width: 100%;
+    justify-content: center;
+  }
+
+  /* TABLE */
+  table {
+    display: block;
+    overflow-x: auto;
+    white-space: nowrap;
+  }
+}
+
+/* =========================================
+   SMALL PHONES
+========================================= */
+
+@media (max-width: 480px) {
+
+  .main-content {
+    padding: 76px 14px 16px;
+  }
+
+  .sidebar {
+    width: 240px;
+  }
+
+  .page-title {
+    font-size: 18px;
+  }
+
+  .card,
+  .stat-card {
+    padding: 16px;
+  }
+
+  .btn {
+    font-size: 13px;
+    padding: 12px;
+  }
+}

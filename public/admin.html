@@ -1,0 +1,345 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Admin — Examify</title>
+  <link rel="stylesheet" href="./css/style.css" />
+  <link rel="stylesheet" href="./css/admin.css">
+</head>
+<body>
+  <!-- MOBILE MENU BUTTON -->
+<button class="mobile-menu-btn" id="menuBtn">
+  ☰
+</button>
+
+<!-- OVERLAY -->
+<div class="sidebar-overlay" id="overlay"></div>
+<div class="app-shell">
+  <aside class="sidebar" id="sidebar"></aside>
+  <main class="main-content">
+    <div class="page-header">
+      <div class="page-title">Admin Panel</div>
+      <div style="display:flex;gap:8px">
+        <button class="btn btn-secondary" onclick="showTab('quizzes')">Quizzes</button>
+        <button class="btn btn-secondary" onclick="showTab('users')">Users</button>
+      </div>
+    </div>
+
+    <div id="stats-row" class="grid-4" style="margin-bottom:24px">
+      <div class="loading-center" style="grid-column:1/-1"><div class="spinner"></div></div>
+    </div>
+
+    <div id="tab-quizzes">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px">
+        <div style="font-weight:700;font-size:16px">All Quizzes</div>
+        <button class="btn btn-primary" onclick="openModal('quiz-modal');resetQuizForm()">+ New Quiz</button>
+      </div>
+      <div id="quiz-list"><div class="loading-center"><div class="spinner"></div></div></div>
+    </div>
+
+    <div id="tab-users" style="display:none">
+      <div style="font-weight:700;font-size:16px;margin-bottom:16px">All Users</div>
+      <div id="user-list"><div class="loading-center"><div class="spinner"></div></div></div>
+    </div>
+  </main>
+</div>
+
+<!-- Quiz Modal -->
+<div class="modal-overlay" id="quiz-modal" style="display:none" onclick="if(event.target===this)closeModal('quiz-modal')">
+  <div class="modal">
+    <div class="modal-header">
+      <div class="modal-title" id="quiz-modal-title">New Quiz</div>
+      <button class="modal-close" onclick="closeModal('quiz-modal')">✕</button>
+    </div>
+    <form id="quiz-form" onsubmit="saveQuiz(event)">
+      <input type="hidden" id="edit-quiz-id" />
+      <div class="form-group"><label>Title</label><input id="q-title" required /></div>
+      <div class="form-group"><label>Description</label><textarea id="q-desc" rows="2"></textarea></div>
+      <div class="form-group"><label>Subject</label>
+        <select id="q-subject"><option value="">No subject</option></select>
+      </div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
+        <div class="form-group"><label>Duration (mins)</label><input id="q-duration" type="number" value="30" min="5" /></div>
+        <div class="form-group"><label>Status</label>
+          <select id="q-status">
+            <option value="draft">Draft</option>
+            <option value="published">Published</option>
+            <option value="archived">Archived</option>
+          </select>
+        </div>
+      </div>
+      <div class="form-group"><label>Scheduled Date (optional)</label><input id="q-scheduled" type="datetime-local" /></div>
+      <div style="display:flex;gap:10px;margin-top:4px">
+        <button type="button" class="btn btn-secondary" onclick="closeModal('quiz-modal')">Cancel</button>
+        <button type="submit" class="btn btn-primary" style="flex:1">Save Quiz</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<!-- Questions Modal -->
+<div class="modal-overlay" id="q-modal" style="display:none" onclick="if(event.target===this)closeModal('q-modal')">
+  <div class="modal" style="max-width:640px">
+    <div class="modal-header">
+      <div class="modal-title">Manage Questions</div>
+      <button class="modal-close" onclick="closeModal('q-modal')">✕</button>
+    </div>
+    <div id="q-modal-body"></div>
+  </div>
+</div>
+
+<!-- Add Question Modal -->
+<div class="modal-overlay" id="add-q-modal" style="display:none" onclick="if(event.target===this)closeModal('add-q-modal')">
+  <div class="modal">
+    <div class="modal-header">
+      <div class="modal-title">Add Question</div>
+      <button class="modal-close" onclick="closeModal('add-q-modal')">✕</button>
+    </div>
+    <form id="add-q-form" onsubmit="saveQuestion(event)">
+      <input type="hidden" id="aq-quiz-id" />
+      <div class="form-group"><label>Question Text</label><textarea id="aq-text" rows="3" required></textarea></div>
+      <div class="form-group"><label>Option A</label><input id="aq-a" required /></div>
+      <div class="form-group"><label>Option B</label><input id="aq-b" required /></div>
+      <div class="form-group"><label>Option C</label><input id="aq-c" required /></div>
+      <div class="form-group"><label>Option D</label><input id="aq-d" required /></div>
+      <div class="form-group"><label>Correct Answer</label>
+        <select id="aq-correct">
+          <option value="a">A</option><option value="b">B</option>
+          <option value="c">C</option><option value="d">D</option>
+        </select>
+      </div>
+      <div class="form-group"><label>Explanation (optional)</label><textarea id="aq-exp" rows="2"></textarea></div>
+      <div style="display:flex;gap:10px">
+        <button type="button" class="btn btn-secondary" onclick="closeModal('add-q-modal')">Cancel</button>
+        <button type="submit" class="btn btn-primary" style="flex:1">Add Question</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<script src="./js/app.js"></script>
+<script>
+let subjects = [];
+
+function showTab(t) {
+  document.getElementById('tab-quizzes').style.display = t==='quizzes'?'':'none';
+  document.getElementById('tab-users').style.display = t==='users'?'':'none';
+}
+
+async function loadStats() {
+  const s = await api('/api/admin/stats');
+  if (!s) return;
+  document.getElementById('stats-row').innerHTML = [
+    { label:'Students', val:s.total_students, col:'var(--accent)' },
+    { label:'Quizzes', val:s.total_quizzes, col:'var(--primary)' },
+    { label:'Attempts', val:s.total_attempts, col:'var(--warning)' },
+    { label:'Avg Score', val:s.avg_score+'%', col:'var(--success)' },
+  ].map(c=>`<div class="stat-card">
+    <div style="font-size:12px;color:var(--muted);text-transform:uppercase;letter-spacing:.5px;margin-bottom:8px">${c.label}</div>
+    <div style="font-size:32px;font-weight:800;color:${c.col}">${c.val}</div>
+  </div>`).join('');
+}
+
+async function loadQuizzes() {
+  const qs = await api('/api/admin/quizzes');
+  if (!qs) return;
+  document.getElementById('quiz-list').innerHTML = qs.length ? `
+    <div class="card" style="padding:0;overflow:hidden">
+      <table>
+        <thead><tr><th>Title</th><th>Subject</th><th>Questions</th><th>Status</th><th>Actions</th></tr></thead>
+        <tbody>
+          ${qs.map(q=>`<tr>
+            <td><div style="font-weight:600">${q.title}</div><div style="font-size:12px;color:var(--muted)">${q.description||''}</div></td>
+            <td style="font-size:13px;color:var(--muted)">${q.subject_name||'—'}</td>
+            <td>${q.question_count||0}</td>
+            <td><span class="badge ${q.status==='published'?'badge-green':q.status==='draft'?'badge-yellow':'badge-red'}">${q.status}</span></td>
+            <td>
+              <div style="display:flex;gap:6px;flex-wrap:wrap">
+                <button class="btn btn-sm btn-secondary" onclick='editQuiz(${JSON.stringify(q)})'>Edit</button>
+                <button class="btn btn-sm btn-secondary" onclick="manageQs(${q.id})">Questions</button>
+                <button class="btn btn-sm btn-danger" onclick="deleteQuiz(${q.id})">Del</button>
+              </div>
+            </td>
+          </tr>`).join('')}
+        </tbody>
+      </table>
+    </div>` :
+    '<div class="card" style="text-align:center;padding:40px;color:var(--muted)">No quizzes yet. Create your first one!</div>';
+}
+
+async function loadUsers() {
+  const us = await api('/api/admin/users');
+  if (!us) return;
+  document.getElementById('user-list').innerHTML = `
+    <div class="card" style="padding:0;overflow:hidden">
+      <table>
+        <thead><tr><th>Name</th><th>Email</th><th>Role</th><th>Quizzes</th><th>Joined</th></tr></thead>
+        <tbody>
+          ${us.map(u=>`<tr>
+            <td style="font-weight:600">${u.name}</td>
+            <td style="font-size:13px;color:var(--muted)">${u.email}</td>
+            <td><span class="badge ${u.role==='admin'?'badge-purple':'badge-blue'}">${u.role}</span></td>
+            <td>${u.attempt_count||0}</td>
+            <td style="font-size:13px;color:var(--muted)">${new Date(u.created_at).toLocaleDateString()}</td>
+          </tr>`).join('')}
+        </tbody>
+      </table>
+    </div>`;
+}
+
+function resetQuizForm() {
+  document.getElementById('edit-quiz-id').value='';
+  document.getElementById('quiz-modal-title').textContent='New Quiz';
+  document.getElementById('quiz-form').reset();
+}
+
+function editQuiz(q) {
+  document.getElementById('edit-quiz-id').value=q.id;
+  document.getElementById('quiz-modal-title').textContent='Edit Quiz';
+  document.getElementById('q-title').value=q.title;
+  document.getElementById('q-desc').value=q.description||'';
+  document.getElementById('q-subject').value=q.subject_id||'';
+  document.getElementById('q-duration').value=q.duration_minutes;
+  document.getElementById('q-status').value=q.status;
+  if(q.scheduled_at) document.getElementById('q-scheduled').value=new Date(q.scheduled_at).toISOString().slice(0,16);
+  openModal('quiz-modal');
+}
+
+async function saveQuiz(e) {
+  e.preventDefault();
+  const id=document.getElementById('edit-quiz-id').value;
+  const body={
+    title:document.getElementById('q-title').value,
+    description:document.getElementById('q-desc').value,
+    subject_id:document.getElementById('q-subject').value||null,
+    duration_minutes:parseInt(document.getElementById('q-duration').value),
+    status:document.getElementById('q-status').value,
+    scheduled_at:document.getElementById('q-scheduled').value||null,
+  };
+  try {
+    if(id) await api(`/api/admin/quizzes/${id}`,{method:'PUT',body});
+    else await api('/api/admin/quizzes',{method:'POST',body});
+    closeModal('quiz-modal');
+    toast(id?'Quiz updated!':'Quiz created!','success');
+    loadQuizzes(); loadStats();
+  } catch(e) { toast(e.message,'error'); }
+}
+
+async function deleteQuiz(id) {
+  if(!confirm('Delete this quiz and all its questions?')) return;
+  try { await api(`/api/admin/quizzes/${id}`,{method:'DELETE'}); toast('Deleted','success'); loadQuizzes(); loadStats(); }
+  catch(e) { toast(e.message,'error'); }
+}
+
+async function manageQs(quizId) {
+  document.getElementById('q-modal-body').innerHTML='<div class="loading-center"><div class="spinner"></div></div>';
+  openModal('q-modal');
+  await refreshQs(quizId);
+}
+
+async function refreshQs(quizId) {
+  const qs = await api(`/api/admin/quizzes/${quizId}/questions`);
+  if(!qs) return;
+  document.getElementById('q-modal-body').innerHTML=`
+    <div style="margin-bottom:12px;text-align:right">
+      <button class="btn btn-primary btn-sm" onclick="openAddQ(${quizId})">+ Add Question</button>
+    </div>
+    ${qs.length ? qs.map((q,i)=>`
+      <div style="background:var(--bg2);border:1px solid var(--border);border-radius:8px;padding:14px;margin-bottom:10px">
+        <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:8px">
+          <div style="font-size:14px;font-weight:600;line-height:1.5">Q${i+1}. ${q.text}</div>
+          <button class="btn btn-danger btn-sm" onclick="deleteQ(${q.id},${quizId})">✕</button>
+        </div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:6px;margin-top:10px">
+          ${['a','b','c','d'].map((o,oi)=>`
+            <div style="font-size:12px;padding:5px 10px;border-radius:6px;
+              background:${q.correct_option===o?'rgba(34,197,94,0.12)':'rgba(255,255,255,0.03)'};
+              border:1px solid ${q.correct_option===o?'var(--success)':'var(--border)'}">
+              <b style="color:${q.correct_option===o?'var(--success)':'var(--muted)'}">${['A','B','C','D'][oi]}.</b> ${q['option_'+o]}
+            </div>`).join('')}
+        </div>
+      </div>`).join('') : '<p style="text-align:center;color:var(--muted);padding:20px">No questions yet</p>'}`;
+}
+
+function openAddQ(quizId) {
+  document.getElementById('aq-quiz-id').value=quizId;
+  document.getElementById('add-q-form').reset();
+  openModal('add-q-modal');
+}
+
+async function saveQuestion(e) {
+  e.preventDefault();
+  const qid=document.getElementById('aq-quiz-id').value;
+  try {
+    await api(`/api/admin/quizzes/${qid}/questions`,{method:'POST',body:{
+      text:document.getElementById('aq-text').value,
+      option_a:document.getElementById('aq-a').value,
+      option_b:document.getElementById('aq-b').value,
+      option_c:document.getElementById('aq-c').value,
+      option_d:document.getElementById('aq-d').value,
+      correct_option:document.getElementById('aq-correct').value,
+      explanation:document.getElementById('aq-exp').value,
+    }});
+    closeModal('add-q-modal');
+    toast('Question added!','success');
+    refreshQs(qid); loadQuizzes();
+  } catch(e) { toast(e.message,'error'); }
+}
+
+async function deleteQ(qId,quizId) {
+  if(!confirm('Delete this question?')) return;
+  try { await api(`/api/admin/questions/${qId}`,{method:'DELETE'}); toast('Deleted','success'); refreshQs(quizId); loadQuizzes(); }
+  catch(e) { toast(e.message,'error'); }
+}
+(async () => {
+  try {
+    const user = await requireAdminUser();
+    if (!user) return;
+
+    document.getElementById('sidebar').innerHTML =
+      renderSidebar('/admin.html', true);
+
+    const subjectsRes = await api('/api/subjects'); // now works (no /api/ needed if api() has base)
+
+    subjects = subjectsRes || [];
+
+    const sel = document.getElementById('q-subject');
+
+    subjects.forEach(s => {
+      const o = document.createElement('option');
+      o.value = s.id;
+      o.textContent = s.name;
+      sel.appendChild(o);
+    });
+
+    loadStats();
+    loadQuizzes();
+    loadUsers();
+
+  } catch (err) {
+    console.error(err);
+    document.getElementById('stats-row').innerHTML =
+      `<div style="color:red">Admin error: ${err.message}</div>`;
+  }
+})();
+/* =========================
+   MOBILE SIDEBAR
+========================= */
+
+const sidebar = document.getElementById("sidebar");
+const menuBtn = document.getElementById("menuBtn");
+const overlay = document.getElementById("overlay");
+
+menuBtn.addEventListener("click", () => {
+  sidebar.classList.toggle("active");
+  overlay.classList.toggle("active");
+});
+
+overlay.addEventListener("click", () => {
+  sidebar.classList.remove("active");
+  overlay.classList.remove("active");
+});
+</script>
+</body>
+</html>

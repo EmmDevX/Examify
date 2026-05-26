@@ -1,0 +1,84 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Results — Examify</title>
+  <link rel="stylesheet" href="./css/style.css" />
+</head>
+<body>
+<div style="max-width:780px;margin:0 auto;padding:32px 20px">
+  <div id="content"><div class="loading-center"><div class="spinner"></div><p>Loading results...</p></div></div>
+</div>
+<script src="./js/app.js"></script>
+<script>
+(async () => {
+  const user = await requireAuth();
+  if (!user) return;
+  const attemptId = new URLSearchParams(location.search).get('attempt');
+  if (!attemptId) { location.href='./quizzes.html'; return; }
+
+  let attempt;
+  try { attempt = await api(`/api/attempts/${attemptId}`); }
+  catch(e) { document.getElementById('content').innerHTML=`<p style="color:var(--danger)">${e.message}</p>`; return; }
+  if (!attempt) return;
+
+  const pct = attempt.total_questions ? Math.round(attempt.score/attempt.total_questions*100) : 0;
+  const passed = pct >= 50;
+  const col = pct>=60?'var(--success)':pct>=40?'var(--warning)':'var(--danger)';
+  const dur = attempt.completed_at && attempt.started_at
+    ? Math.round((new Date(attempt.completed_at)-new Date(attempt.started_at))/60000) : '—';
+
+  document.getElementById('content').innerHTML = `
+    <div style="text-align:center;margin-bottom:28px">
+      <a href="./quizzes.html" style="color:var(--muted);font-size:13px">← Back to Quizzes</a>
+      <div style="font-size:22px;font-weight:700;margin-top:12px">${attempt.quiz_title}</div>
+      <div style="color:var(--muted);font-size:14px">${attempt.subject_name||''}</div>
+    </div>
+
+    <div class="card" style="text-align:center;padding:36px;margin-bottom:24px">
+      <div class="score-circle" style="border-color:${col};color:${col}">
+        ${pct}<span style="font-size:16px">%</span>
+      </div>
+      <div style="font-size:20px;font-weight:700;margin:16px 0 6px">${passed?'🎉 Passed!':'📚 Keep Practicing'}</div>
+      <div style="color:var(--muted)">${attempt.score} correct out of ${attempt.total_questions} questions</div>
+      <div style="display:flex;justify-content:center;gap:24px;margin-top:16px;font-size:14px;color:var(--muted)">
+        <span>⏱ ${dur} mins</span>
+        <span style="color:var(--success)">✅ ${attempt.score} correct</span>
+        <span style="color:var(--danger)">❌ ${attempt.total_questions-attempt.score} wrong</span>
+      </div>
+      <div style="display:flex;justify-content:center;gap:12px;margin-top:24px">
+        <a href="./quizzes.html" class="btn btn-secondary">Try Another Quiz</a>
+        <a href="./leaderboard.html" class="btn btn-primary">View Leaderboard</a>
+      </div>
+    </div>
+
+    <div class="card">
+      <div style="font-size:17px;font-weight:700;margin-bottom:20px">Answer Review</div>
+      ${(attempt.answers||[]).map((a,i) => `
+        <div style="padding:18px 0;border-bottom:1px solid rgba(42,42,106,0.4)">
+          <div style="display:flex;gap:10px;align-items:flex-start;margin-bottom:12px">
+            <span class="badge ${a.is_correct?'badge-green':'badge-red'}" style="flex-shrink:0;margin-top:2px">${a.is_correct?'✓':'✗'}</span>
+            <div style="font-size:15px;font-weight:600;line-height:1.5">Q${i+1}. ${a.text}</div>
+          </div>
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-left:36px">
+            ${['a','b','c','d'].map((o,oi)=>{
+              const isCorrect = a.correct_option===o;
+              const isSelected = a.selected_option===o;
+              let bg = 'background:rgba(255,255,255,0.03);border:1px solid var(--border)';
+              if(isCorrect) bg='background:rgba(34,197,94,0.12);border:1px solid var(--success)';
+              else if(isSelected) bg='background:rgba(239,68,68,0.12);border:1px solid var(--danger)';
+              return `<div style="${bg};border-radius:8px;padding:8px 12px;font-size:13px">
+                <b>${['A','B','C','D'][oi]}.</b> ${a['option_'+o]}
+                ${isCorrect?' <span style="color:var(--success)">✓</span>':''}
+                ${isSelected&&!isCorrect?' <span style="color:var(--danger)">✗</span>':''}
+              </div>`;
+            }).join('')}
+          </div>
+          ${a.explanation?`<div style="margin:10px 0 0 36px;font-size:13px;color:var(--accent);background:rgba(56,189,248,0.06);border-radius:8px;padding:10px 14px">💡 ${a.explanation}</div>`:''}
+        </div>`).join('')}
+    </div>`;
+})();
+</script>
+</body>
+</html>

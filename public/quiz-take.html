@@ -1,0 +1,121 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Quiz — Examify</title>
+  <link rel="stylesheet" href="css/style.css" />
+</head>
+<body>
+<div style="max-width:860px;margin:0 auto;padding:32px 20px">
+  <div id="content"><div class="loading-center"><div class="spinner"></div><p>Loading quiz...</p></div></div>
+</div>
+<script src="./js/app.js"></script>
+<script>
+const params = new URLSearchParams(location.search);
+const quizId = params.get('quiz');
+let quiz, questions, attemptId, answers = {}, current = 0, timeLeft = 0, timerInterval;
+
+function fmt(s) { return `${String(Math.floor(s/60)).padStart(2,'0')}:${String(s%60).padStart(2,'0')}`; }
+
+function startTimer() {
+  timerInterval = setInterval(() => {
+    timeLeft--;
+    const el = document.getElementById('timer');
+    if (el) {
+      el.textContent = '⏱ ' + fmt(timeLeft);
+      el.className = 'timer' + (timeLeft < 60 ? ' danger' : timeLeft < 300 ? ' warning' : '');
+    }
+    if (timeLeft <= 0) { clearInterval(timerInterval); submitQuiz(); }
+  }, 1000);
+}
+
+function renderQ() {
+  const q = questions[current];
+  const sel = answers[q.id];
+  document.getElementById('quiz-body').innerHTML = `
+    <div style="font-size:13px;color:var(--muted);margin-bottom:6px">Question ${current+1} of ${questions.length}</div>
+    <div class="progress-bar" style="margin-bottom:24px">
+      <div class="progress-fill" style="width:${((current+1)/questions.length*100).toFixed(0)}%"></div>
+    </div>
+    <div style="font-size:17px;font-weight:600;line-height:1.6;margin-bottom:24px">${q.text}</div>
+    ${['a','b','c','d'].map((o,i) => `
+      <button class="option-btn ${sel===o?'selected':''}" onclick="pick('${o}')">
+        <span class="option-letter">${['A','B','C','D'][i]}</span>
+        <span>${q['option_'+o]}</span>
+      </button>`).join('')}
+    <div style="display:flex;justify-content:space-between;margin-top:24px">
+      <button class="btn btn-secondary" onclick="go(-1)" ${current===0?'disabled':''}>← Previous</button>
+      ${current < questions.length-1
+        ? `<button class="btn btn-primary" onclick="go(1)">Next →</button>`
+        : `<button class="btn btn-success" onclick="confirmSubmit()">✓ Submit Quiz</button>`}
+    </div>`;
+
+  document.getElementById('q-nav').innerHTML = questions.map((_,i) =>
+    `<button onclick="jump(${i})" style="width:30px;height:30px;border-radius:50%;border:none;cursor:pointer;font-size:12px;font-weight:700;
+     background:${i===current?'var(--primary)':answers[questions[i].id]?'rgba(91,61,232,0.35)':'var(--card2)'};color:var(--text)">${i+1}</button>`
+  ).join('');
+}
+
+function pick(o) { answers[questions[current].id] = o; renderQ(); }
+function go(d) { current = Math.max(0,Math.min(questions.length-1,current+d)); renderQ(); }
+function jump(i) { current=i; renderQ(); }
+
+function confirmSubmit() {
+  const left = questions.length - Object.keys(answers).length;
+  if (left > 0 && !confirm(`You have ${left} unanswered question(s). Submit anyway?`)) return;
+  submitQuiz();
+}
+
+async function submitQuiz() {
+  clearInterval(timerInterval);
+  document.getElementById('quiz-body').innerHTML = '<div class="loading-center"><div class="spinner"></div><p>Submitting...</p></div>';
+  try {
+    const r = await api(`/api/attempts/${attemptId}/submit`, { method:'POST', body:{ answers } });
+    if (r) window.location.href = `./results.html?attempt=${r.id}`;
+  } catch(e) { toast('Submission failed: ' + e.message, 'error'); }
+}
+
+(async () => {
+  const user = await requireAuth();
+  if (!user) return;
+  if (!quizId) { location.href='./quizzes.html'; return; }
+  try {
+    [quiz, questions] = await Promise.all([api(`/api/quizzes/${quizId}`), api(`/api/quizzes/${quizId}/questions`)]);
+    if (!questions || !questions.length) { alert('This quiz has no questions yet.'); location.href='./quizzes.html'; return; }
+    const attempt = await api('/api/attempts', { method:'POST', body:{ quiz_id:parseInt(quizId) } });
+    if (!attempt) return;
+    attemptId = attempt.id;
+    timeLeft = quiz.duration_minutes * 60;
+
+    document.getElementById('content').innerHTML = `
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:24px;flex-wrap:wrap;gap:12px">
+        <div>
+          <a href="./quizzes.html" style="color:var(--muted);font-size:13px">← Back to Quizzes</a>
+          <div style="font-size:20px;font-weight:700;margin-top:4px">${quiz.title}</div>
+          <div style="font-size:13px;color:var(--muted)">${quiz.subject_name || ''} · ${questions.length} questions</div>
+        </div>
+        <div id="timer" class="timer">⏱ ${fmt(timeLeft)}</div>
+      </div>
+      <div style="display:flex;gap:20px;align-items:flex-start">
+        <div style="flex:1"><div class="card" id="quiz-body"></div></div>
+        <div style="width:190px;flex-shrink:0">
+          <div class="card card-sm">
+            <div style="font-size:12px;color:var(--muted);font-weight:600;margin-bottom:10px">QUESTIONS</div>
+            <div id="q-nav" style="display:flex;flex-wrap:wrap;gap:5px"></div>
+            <div style="margin-top:12px;font-size:11px;color:var(--muted);line-height:1.8">
+              <span style="display:inline-block;width:14px;height:14px;border-radius:50%;background:rgba(91,61,232,0.35);vertical-align:middle;margin-right:4px"></span>Answered<br>
+              <span style="display:inline-block;width:14px;height:14px;border-radius:50%;background:var(--card2);vertical-align:middle;margin-right:4px"></span>Not answered
+            </div>
+          </div>
+        </div>
+      </div>`;
+    renderQ();
+    startTimer();
+  } catch(e) {
+    document.getElementById('content').innerHTML = `<p style="color:var(--danger)">${e.message}</p>`;
+  }
+})();
+</script>
+</body>
+</html>
