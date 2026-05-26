@@ -1,8 +1,6 @@
-const API_BASE_URL = 'http://127.0.0.1:3000';
-
 async function api(path, opts = {}) {
   try {
-    const res = await fetch(`${API_BASE_URL}${path}`, {
+    const res = await fetch(path, {
       method: opts.method || "GET",
       credentials: "include",
       headers: {
@@ -35,7 +33,7 @@ async function api(path, opts = {}) {
 
 async function requireAuth() {
   try {
-    const res = await fetch(`${API_BASE_URL}/api/auth/me`, {
+    const res = await fetch("/api/auth/me", {
       credentials: "include",
     });
 
@@ -66,7 +64,7 @@ async function requireAdminUser() {
 
 async function signOut() {
   try {
-    await fetch(`${API_BASE_URL}/api/auth/logout`, {
+    await fetch("/api/auth/logout", {
       method: "POST",
       credentials: "include",
     });
@@ -80,26 +78,10 @@ async function signOut() {
 
 function renderSidebar(activePage = "", isAdmin = false) {
   const pages = [
-    {
-      href: "/public/dashboard.html",
-      label: "Dashboard",
-      icon: "◫",
-    },
-    {
-      href: "/public/quizzes.html",
-      label: "Quizzes",
-      icon: "📖",
-    },
-    {
-      href: "/public/leaderboard.html",
-      label: "Leaderboard",
-      icon: "🏆",
-    },
-    {
-      href: "/public/profile.html",
-      label: "Profile",
-      icon: "👤",
-    },
+    { href: "/public/dashboard.html", label: "Dashboard", icon: "◫" },
+    { href: "/public/quizzes.html", label: "Quizzes", icon: "📖" },
+    { href: "/public/leaderboard.html", label: "Leaderboard", icon: "🏆" },
+    { href: "/public/profile.html", label: "Profile", icon: "👤" },
   ];
 
   if (isAdmin) {

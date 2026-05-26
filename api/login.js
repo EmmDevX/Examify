@@ -1,27 +1,28 @@
-import pool from "../db.js";
 import bcrypt from "bcryptjs";
+import { pool } from "../db.js";
+import { safeUser } from "../auth.js";
 
 export default async function handler(req, res) {
-  if (req.method !== "POST") {
-    return res.status(405).json({ message: "Only POST allowed" });
-  }
-
   const { email, password } = req.body;
 
-  const user = await pool.query(
+  const r = await pool.query(
     "SELECT * FROM users WHERE email=$1",
-    [email]
+    [email.toLowerCase()]
   );
 
-  if (user.rows.length === 0) {
-    return res.status(400).json({ message: "User not found" });
+  if (!r.rows.length) {
+    return res.status(401).json({ error: "Invalid login" });
   }
 
-  const valid = await bcrypt.compare(password, user.rows[0].password);
+  const user = r.rows[0];
+
+  const valid = await bcrypt.compare(password, user.password_hash);
 
   if (!valid) {
-    return res.status(401).json({ message: "Wrong password" });
+    return res.status(401).json({ error: "Invalid login" });
   }
 
-  res.json({ message: "Login successful" });
+  res.setHeader("Set-Cookie", `userId=${user.id}; Path=/; HttpOnly`);
+
+  res.json(safeUser(user));
 }
