@@ -1,7 +1,7 @@
 {
-  "name": "jamb-quiz-platform",
+  "name": "Examify",
   "version": "1.0.0",
-  "description": "JAMB Quiz Platform - plain HTML/CSS/JS + Express backend",
+  "description": "Examify - plain HTML/CSS/JS + Express backend",
   "main": "server.js",
   "scripts": {
     "start": "node server.js"
