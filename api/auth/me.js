@@ -19,13 +19,16 @@ export default async function handler(req, res) {
       [userId]
     );
 
-    if (result.rows.length === 0) {
+    if (!result.rows.length) {
       return res.status(401).json({ message: "User not found" });
     }
 
     return res.status(200).json(result.rows[0]);
   } catch (err) {
-    console.error("ME ERROR:", err);
-    return res.status(500).json({ message: "Server error" });
+    console.error("ME ERROR:", err); // IMPORTANT: check Vercel logs
+    return res.status(500).json({
+      message: "Server error",
+      error: err.message
+    });
   }
 }
