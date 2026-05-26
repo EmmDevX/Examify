@@ -1,6 +1,6 @@
 import bcrypt from "bcryptjs";
 import { pool } from "../db.js";
-import { safeUser } from "../auth.js";
+import { safeUser } from "./auth/me.js";
 
 export default async function handler(req, res) {
   const { email, password } = req.body;
