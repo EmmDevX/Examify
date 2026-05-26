@@ -20,9 +20,7 @@ pool.connect()
 
 app.use(cors({
   origin: [
-    "http://127.0.0.1:5500",
-    "http://localhost:5500",
-    "https://examify-backend-vmcx.onrender.com"
+    "https://examify25.vercel.app"
   ],
   credentials: true
 }));
