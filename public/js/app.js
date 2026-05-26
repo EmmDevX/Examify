@@ -14,7 +14,7 @@ async function api(path, opts = {}) {
     });
 
     if (res.status === 401) {
-      window.location.href = "/public/sign-in.html";
+      window.location.href = "/sign-in.html";
       return null;
     }
 
@@ -37,15 +37,13 @@ async function requireAuth() {
       credentials: "include",
     });
 
-    if (!res.ok) {
-      window.location.href = "/public/sign-in.html";
-      return null;
-    }
+    if (res.status === 401) return null;
+
+    if (!res.ok) return null;
 
     return await res.json();
   } catch (error) {
     console.error("Auth Error:", error);
-    window.location.href = "/public/sign-in.html";
     return null;
   }
 }
@@ -55,7 +53,7 @@ async function requireAdminUser() {
   if (!user) return null;
 
   if (user.role !== "admin") {
-    window.location.href = "/public/dashboard.html";
+    window.location.href = "/dashboard.html";
     return null;
   }
 
@@ -69,7 +67,7 @@ async function signOut() {
       credentials: "include",
     });
 
-    window.location.href = "/public/sign-in.html";
+    window.location.href = "/sign-in.html";
   } catch (error) {
     console.error("Logout Error:", error);
     toast("Failed to sign out", "error");
@@ -78,10 +76,10 @@ async function signOut() {
 
 function renderSidebar(activePage = "", isAdmin = false) {
   const pages = [
-    { href: "/public/dashboard.html", label: "Dashboard", icon: "◫" },
-    { href: "/public/quizzes.html", label: "Quizzes", icon: "📖" },
-    { href: "/public/leaderboard.html", label: "Leaderboard", icon: "🏆" },
-    { href: "/public/profile.html", label: "Profile", icon: "👤" },
+    { href: "/dashboard.html", label: "Dashboard", icon: "◫" },
+    { href: "/quizzes.html", label: "Quizzes", icon: "📖" },
+    { href: "/leaderboard.html", label: "Leaderboard", icon: "🏆" },
+    { href: "/profile.html", label: "Profile", icon: "👤" },
   ];
 
   if (isAdmin) {
