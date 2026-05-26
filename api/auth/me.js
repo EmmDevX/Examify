@@ -1,11 +1,7 @@
+import * as cookie from "cookie";
 import { pool } from "../../lib/db.js";
-import cookie from "cookie";
 
 export default async function handler(req, res) {
-  if (req.method !== "GET") {
-    return res.status(405).json({ message: "Only GET allowed" });
-  }
-
   try {
     const cookies = cookie.parse(req.headers.cookie || "");
     const userId = cookies.userId;
@@ -15,7 +11,7 @@ export default async function handler(req, res) {
     }
 
     const result = await pool.query(
-      "SELECT id, name, email, role, school FROM users WHERE id = $1",
+      "SELECT id, name, email, role FROM users WHERE id = $1",
       [userId]
     );
 
@@ -25,10 +21,11 @@ export default async function handler(req, res) {
 
     return res.status(200).json(result.rows[0]);
   } catch (err) {
-    console.error("ME ERROR:", err); // IMPORTANT: check Vercel logs
+    console.error("ME ERROR:", err);
+
     return res.status(500).json({
       message: "Server error",
-      error: err.message
+      error: err.message,
     });
   }
 }
