@@ -1,6 +1,6 @@
 import bcrypt from "bcryptjs";
-import { pool } from "../db.js";
-import { safeUser } from "./auth/me.js";
+import { pool } from "../../lib/db.js";
+import { safeUser } from "../../lib/auth.js";
 
 export default async function handler(req, res) {
   const { email, password } = req.body;
@@ -22,7 +22,10 @@ export default async function handler(req, res) {
     return res.status(401).json({ error: "Invalid login" });
   }
 
-  res.setHeader("Set-Cookie", `userId=${user.id}; Path=/; HttpOnly`);
+  res.setHeader(
+    "Set-Cookie",
+    `userId=${user.id}; Path=/; HttpOnly; SameSite=Lax`
+  );
 
-  res.json(safeUser(user));
+  res.status(200).json(safeUser(user));
 }
