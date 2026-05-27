@@ -1,27 +1,44 @@
 import bcrypt from "bcryptjs";
 import { pool } from "../../lib/db.js";
-import { safeUser } from "../../lib/auth.js";
 
 export default async function handler(req, res) {
-  const { name, email, password } = req.body;
+  try {
+    if (req.method !== "POST") {
+      return res.status(405).json({ error: "Only POST allowed" });
+    }
 
-  const exists = await pool.query(
-    "SELECT id FROM users WHERE email=$1",
-    [email.toLowerCase()]
-  );
+    const { name, email, password } = req.body;
 
-  if (exists.rows.length) {
-    return res.status(400).json({ error: "Email exists" });
+    console.log("REGISTER HIT:", { name, email });
+
+    if (!name || !email || !password) {
+      return res.status(400).json({ error: "Missing fields" });
+    }
+
+    const exists = await pool.query(
+      "SELECT id FROM users WHERE email=$1",
+      [email.toLowerCase()]
+    );
+
+    if (exists.rows.length) {
+      return res.status(400).json({ error: "User already exists" });
+    }
+
+    const hash = await bcrypt.hash(password, 10);
+
+    const result = await pool.query(
+      `INSERT INTO users (name, email, password_hash, role)
+       VALUES ($1,$2,$3,$4) RETURNING id, name, email, role`,
+      [name, email.toLowerCase(), hash, "student"]
+    );
+
+    return res.status(200).json(result.rows[0]);
+  } catch (err) {
+    console.error("REGISTER ERROR:", err);
+
+    return res.status(500).json({
+      error: "Register failed",
+      detail: err.message,
+    });
   }
-
-  const hash = await bcrypt.hash(password, 12);
-
-  const r = await pool.query(
-    "INSERT INTO users (name,email,password_hash,role) VALUES ($1,$2,$3,'student') RETURNING *",
-    [name, email.toLowerCase(), hash]
-  );
-
-  res.setHeader("Set-Cookie", `userId=${r.rows[0].id}; Path=/; HttpOnly; SameSite=Lax`);
-
-  res.status(201).json(safeUser(r.rows[0]));
 }
