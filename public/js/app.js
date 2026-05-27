@@ -1,33 +1,45 @@
 const API_BASE_URL = "https://examify25.vercel.app";
 
-export async function api(url, options = {}) {
-  const res = await fetch(url, {
-    method: options.method || "GET",
-    headers: {
-      "Content-Type": "application/json",
-      ...(options.headers || {})
-    },
-    credentials: "include",
-    body: options.body ? JSON.stringify(options.body) : undefined
-  });
+/* =========================
+   API FUNCTION (FIXED ONLY)
+========================= */
+async function api(url, options = {}) {
+  try {
+    const res = await fetch(url, {
+      method: options.method || "GET",
+      headers: {
+        "Content-Type": "application/json",
+        ...(options.headers || {}),
+      },
+      credentials: "include",
+      body: options.body ? JSON.stringify(options.body) : undefined,
+    });
 
-  if (res.status === 401) {
-    window.location.href = "/sign-in.html";
+    if (res.status === 401) {
+      window.location.href = "/sign-in.html";
+      return null;
+    }
+
+    if (!res.ok) {
+      const err = await res.json().catch(() => ({}));
+      throw new Error(err.error || "Request failed");
+    }
+
+    return await res.json();
+  } catch (error) {
+    console.error("API Error:", error);
+    toast(error.message || "Something went wrong", "error");
     return null;
   }
-
-  if (!res.ok) {
-    const err = await res.json().catch(() => ({ error: "Request failed" }));
-    throw new Error(err.error || `Error ${res.status}`);
-  }
-
-  return await res.json();
 }
 
-export async function requireAuth() {
+/* =========================
+   AUTH CHECK
+========================= */
+async function requireAuth() {
   try {
     const res = await fetch(`${API_BASE_URL}/api/auth?action=me`, {
-      credentials: "include"
+      credentials: "include",
     });
 
     if (res.status === 401) return null;
@@ -40,7 +52,10 @@ export async function requireAuth() {
   }
 }
 
-export async function requireAdminUser() {
+/* =========================
+   ADMIN CHECK
+========================= */
+async function requireAdminUser() {
   const user = await requireAuth();
 
   if (!user) return null;
@@ -53,11 +68,14 @@ export async function requireAdminUser() {
   return user;
 }
 
-export async function signOut() {
+/* =========================
+   SIGN OUT
+========================= */
+async function signOut() {
   try {
     await fetch(`${API_BASE_URL}/api/auth?action=logout`, {
       method: "POST",
-      credentials: "include"
+      credentials: "include",
     });
 
     window.location.href = "/sign-in.html";
@@ -67,19 +85,22 @@ export async function signOut() {
   }
 }
 
-export function renderSidebar(activePage = "", isAdmin = false) {
+/* =========================
+   SIDEBAR RENDER
+========================= */
+function renderSidebar(activePage = "", isAdmin = false) {
   const pages = [
     { href: "/dashboard.html", label: "Dashboard", icon: "◫" },
     { href: "/quizzes.html", label: "Quizzes", icon: "📖" },
     { href: "/leaderboard.html", label: "Leaderboard", icon: "🏆" },
-    { href: "/profile.html", label: "Profile", icon: "👤" }
+    { href: "/profile.html", label: "Profile", icon: "👤" },
   ];
 
   if (isAdmin) {
     pages.push({
       href: "/admin.html",
       label: "Admin Panel",
-      icon: "⚙️"
+      icon: "⚙️",
     });
   }
 
@@ -112,7 +133,10 @@ export function renderSidebar(activePage = "", isAdmin = false) {
   `;
 }
 
-export function toast(msg, type = "info") {
+/* =========================
+   TOAST
+========================= */
+function toast(msg, type = "info") {
   let el = document.getElementById("toast");
 
   if (!el) {
@@ -133,17 +157,23 @@ export function toast(msg, type = "info") {
   }, 3000);
 }
 
-export function openModal(id) {
+/* =========================
+   MODALS
+========================= */
+function openModal(id) {
   const modal = document.getElementById(id);
   if (modal) modal.style.display = "flex";
 }
 
-export function closeModal(id) {
+function closeModal(id) {
   const modal = document.getElementById(id);
   if (modal) modal.style.display = "none";
 }
 
-export function loadingHTML(msg = "Loading...") {
+/* =========================
+   LOADING UI
+========================= */
+function loadingHTML(msg = "Loading...") {
   return `
     <div class="loading-center">
       <div class="spinner"></div>
@@ -151,3 +181,26 @@ export function loadingHTML(msg = "Loading...") {
     </div>
   `;
 }
+
+/* =========================
+   GLOBAL AUTH (FIXED)
+========================= */
+window.requireAuth = async function () {
+  try {
+    const res = await fetch(`${API_BASE_URL}/api/auth?action=me`, {
+      credentials: "include",
+    });
+
+    if (res.status === 401) {
+      window.location.href = "./sign-in.html";
+      return null;
+    }
+
+    if (!res.ok) return null;
+
+    return await res.json();
+  } catch (err) {
+    window.location.href = "./sign-in.html";
+    return null;
+  }
+};
