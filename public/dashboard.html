@@ -11,6 +11,7 @@
     <link rel="stylesheet" href="./css/toogle.css" />
     <link rel="stylesheet" href="./css/dash.css" />
   </head>
+
   <body>
     <button class="mobile-menu-btn" id="menuBtn">☰</button>
 
@@ -52,294 +53,205 @@
         document.body.classList.add("dark");
       }
 
-      (async () => {
-        const user = await requireAuth();
+      // ⚡ STEP 1: fast auth (no UI blocking)
+      let currentUser = null;
 
-        if (!user) return;
+      (async () => {
+        currentUser = await requireAuth();
+        if (!currentUser) return;
 
         document.getElementById("sidebar").innerHTML = renderSidebar(
           "/dashboard.html",
-          user.role === "admin",
+          currentUser.role === "admin"
         );
 
+        // ⚡ STEP 2: render skeleton FIRST (fast UI load)
+        document.getElementById("content").innerHTML = `
+          <div class="page-header">
+            <div>
+              <div class="page-title">
+                Welcome back, ${currentUser.name.split(" ")[0]} 👋
+              </div>
+              <div class="page-subtitle">
+                Loading your progress...
+              </div>
+            </div>
+          </div>
+
+          <div class="grid-4" style="margin-bottom:24px">
+            <div class="loading-center"><div class="spinner"></div></div>
+            <div class="loading-center"><div class="spinner"></div></div>
+            <div class="loading-center"><div class="spinner"></div></div>
+            <div class="loading-center"><div class="spinner"></div></div>
+          </div>
+
+          <div class="grid-2">
+            <div class="card"><div class="spinner"></div></div>
+            <div class="card"><div class="spinner"></div></div>
+          </div>
+        `;
+
+        // ⚡ STEP 3: load stats in background (non-blocking)
+        requestAnimationFrame(loadDashboardData);
+      })();
+
+      async function loadDashboardData() {
         let stats = await api("/api/admin?type=stats");
 
-        if (!stats) {
-          document.getElementById("content").innerHTML = `
-      <div class="card">
-        <p style="color:var(--danger)">
-          Failed to load dashboard stats
-        </p>
-      </div>
-    `;
-          return;
-        }
+        if (!stats) return;
 
         stats.subject_scores = stats.subject_scores || [];
         stats.recent_attempts = stats.recent_attempts || [];
 
+        // ⚡ small delay prevents mobile UI freeze
+        setTimeout(() => {
+          renderDashboard(stats);
+        }, 50);
+      }
+
+      function renderDashboard(stats) {
         document.getElementById("content").innerHTML = `
-    <div class="page-header">
+          <div class="page-header">
 
-      <div>
-        <div class="page-title">
-          Welcome back, ${user.name.split(" ")[0]} 👋
-        </div>
-
-        <div class="page-subtitle">
-          Here's your learning progress today
-        </div>
-      </div>
-
-      <div style="display:flex;gap:10px;align-items:center">
-
-        <button id="themeToggle" class="btn btn-secondary">
-          ${
-            document.body.classList.contains("dark")
-              ? "Light Mode ☀️"
-              : "Dark Mode 🌙"
-          }
-        </button>
-
-        <a href="./quizzes.html" class="btn btn-primary">
-          Take Quiz →
-        </a>
-
-      </div>
-    </div>
-
-    <div class="grid-4" style="margin-bottom:24px">
-
-      ${[
-        {
-          label: "Total Attempts",
-          value: stats.total_attempts || 0,
-          color: "var(--primary)",
-        },
-
-        {
-          label: "Average Score",
-          value: (stats.avg_score || 0) + "%",
-          color: "var(--success)",
-        },
-
-        {
-          label: "Best Score",
-          value: (stats.best_score || 0) + "%",
-          color: "var(--warning)",
-        },
-
-        {
-          label: "Weekly Streak",
-          value: stats.weekly_streak || 0,
-          color: "var(--accent)",
-        },
-      ]
-        .map(
-          (card) => `
-
-        <div class="stat-card">
-
-          <div style="
-            font-size:12px;
-            color:var(--muted);
-            margin-bottom:10px;
-            text-transform:uppercase;
-            letter-spacing:.5px;
-          ">
-            ${card.label}
-          </div>
-
-          <div style="
-            font-size:34px;
-            font-weight:800;
-            color:${card.color};
-          ">
-            ${card.value}
-          </div>
-
-        </div>
-
-      `,
-        )
-        .join("")}
-
-    </div>
-
-    <div class="grid-2">
-
-      <div class="card">
-
-        <div style="
-          font-size:17px;
-          font-weight:700;
-          margin-bottom:18px;
-        ">
-          Score by Subject
-        </div>
-
-        ${
-          stats.subject_scores.length
-            ? stats.subject_scores
-                .map(
-                  (subject) => `
-
-              <div style="margin-bottom:18px">
-
-                <div style="
-                  display:flex;
-                  justify-content:space-between;
-                  font-size:13px;
-                  margin-bottom:7px;
-                ">
-
-                  <span>${subject.subject}</span>
-
-                  <span style="
-                    font-weight:700;
-                    color:var(--primary);
-                  ">
-                    ${subject.score || 0}%
-                  </span>
-
-                </div>
-
-                <div class="progress-bar">
-
-                  <div
-                    class="progress-fill"
-                    style="
-                      width:${subject.score || 0}%;
-                      background:
-                        ${
-                          (subject.score || 0) >= 70
-                            ? "var(--success)"
-                            : (subject.score || 0) >= 40
-                              ? "var(--warning)"
-                              : "var(--danger)"
-                        };
-                    "
-                  ></div>
-
-                </div>
-
+            <div>
+              <div class="page-title">
+                Welcome back, ${currentUser.name.split(" ")[0]} 👋
               </div>
 
-            `,
-                )
-                .join("")
-            : `
-
-              <div style="
-                text-align:center;
-                padding:40px 0;
-                color:var(--muted);
-              ">
-                No subject performance yet
+              <div class="page-subtitle">
+                Here's your learning progress today
               </div>
+            </div>
 
-            `
-        }
+            <div style="display:flex;gap:10px;align-items:center">
 
-      </div>
+              <button id="themeToggle" class="btn btn-secondary">
+                ${
+                  document.body.classList.contains("dark")
+                    ? "Light Mode ☀️"
+                    : "Dark Mode 🌙"
+                }
+              </button>
 
-      <div class="card">
+              <a href="./quizzes.html" class="btn btn-primary">
+                Take Quiz →
+              </a>
 
-        <div style="
-          font-size:17px;
-          font-weight:700;
-          margin-bottom:18px;
-        ">
-          Recent Attempts
-        </div>
+            </div>
+          </div>
 
-        ${
-          stats.recent_attempts.length
-            ? stats.recent_attempts
-                .map((a) => {
-                  const percent = a.total_questions
-                    ? Math.round((a.score / a.total_questions) * 100)
-                    : 0;
+          <div class="grid-4" style="margin-bottom:24px">
 
-                  return `
-
-                <div style="
-                  display:flex;
-                  justify-content:space-between;
-                  align-items:center;
-                  padding:12px 0;
-                  border-bottom:1px solid rgba(255,255,255,0.05);
-                ">
-
-                  <div>
-
-                    <div style="
-                      font-size:14px;
-                      font-weight:600;
-                      margin-bottom:4px;
-                    ">
-                      ${a.title}
+            ${[
+              { label: "Total Attempts", value: stats.total_attempts || 0, color: "var(--primary)" },
+              { label: "Average Score", value: (stats.avg_score || 0) + "%", color: "var(--success)" },
+              { label: "Best Score", value: (stats.best_score || 0) + "%", color: "var(--warning)" },
+              { label: "Weekly Streak", value: stats.weekly_streak || 0, color: "var(--accent)" },
+            ]
+              .map(
+                (card) => `
+                  <div class="stat-card">
+                    <div style="font-size:12px;color:var(--muted);margin-bottom:10px;text-transform:uppercase;">
+                      ${card.label}
                     </div>
-
-                    <div style="
-                      font-size:12px;
-                      color:var(--muted);
-                    ">
-                      ${a.subject || "General"} •
-                      ${new Date(a.completed_at).toLocaleDateString()}
+                    <div style="font-size:34px;font-weight:800;color:${card.color};">
+                      ${card.value}
                     </div>
-
                   </div>
+                `
+              )
+              .join("")}
 
-                  <a
-                    href="./results.html?attempt=${a.id}"
-                    class="badge ${
-                      percent >= 70
-                        ? "badge-green"
-                        : percent >= 40
-                          ? "badge-yellow"
-                          : "badge-red"
-                    }"
-                    style="text-decoration:none"
-                  >
-                    ${percent}%
-                  </a>
+          </div>
 
-                </div>
+          <div class="grid-2">
 
-              `;
-                })
-                .join("")
-            : `
-
-              <div style="
-                text-align:center;
-                padding:40px 0;
-                color:var(--muted);
-              ">
-                No quiz attempts yet
+            <div class="card">
+              <div style="font-size:17px;font-weight:700;margin-bottom:18px;">
+                Score by Subject
               </div>
 
-            `
-        }
+              ${
+                stats.subject_scores.length
+                  ? stats.subject_scores.map(subject => `
+                      <div style="margin-bottom:18px">
+                        <div style="display:flex;justify-content:space-between;font-size:13px;margin-bottom:7px;">
+                          <span>${subject.subject}</span>
+                          <span style="font-weight:700;color:var(--primary);">
+                            ${subject.score || 0}%
+                          </span>
+                        </div>
 
-      </div>
+                        <div class="progress-bar">
+                          <div class="progress-fill"
+                            style="width:${subject.score || 0}%;">
+                          </div>
+                        </div>
+                      </div>
+                    `).join("")
+                  : `<div style="text-align:center;padding:40px;color:var(--muted);">
+                      No subject performance yet
+                    </div>`
+              }
+            </div>
 
-    </div>
-  `;
+            <div class="card">
+              <div style="font-size:17px;font-weight:700;margin-bottom:18px;">
+                Recent Attempts
+              </div>
 
-        const themeBtn = document.getElementById("themeToggle");
+              ${
+                stats.recent_attempts.length
+                  ? stats.recent_attempts.map(a => {
+                      const percent = a.total_questions
+                        ? Math.round((a.score / a.total_questions) * 100)
+                        : 0;
 
-        themeBtn.addEventListener("click", () => {
+                      return `
+                        <div style="display:flex;justify-content:space-between;align-items:center;padding:12px 0;">
+                          <div>
+                            <div style="font-size:14px;font-weight:600;">
+                              ${a.title}
+                            </div>
+                            <div style="font-size:12px;color:var(--muted);">
+                              ${a.subject || "General"} • ${new Date(a.completed_at).toLocaleDateString()}
+                            </div>
+                          </div>
+
+                          <a href="./results.html?attempt=${a.id}"
+                             class="badge ${
+                               percent >= 70
+                                 ? "badge-green"
+                                 : percent >= 40
+                                   ? "badge-yellow"
+                                   : "badge-red"
+                             }">
+                            ${percent}%
+                          </a>
+                        </div>
+                      `;
+                    }).join("")
+                  : `<div style="text-align:center;padding:40px;color:var(--muted);">
+                      No quiz attempts yet
+                    </div>`
+              }
+
+            </div>
+
+          </div>
+        `;
+
+        // theme toggle stays same
+        document.getElementById("themeToggle").addEventListener("click", () => {
           document.body.classList.toggle("dark");
 
           const dark = document.body.classList.contains("dark");
-
           localStorage.setItem("theme", dark ? "dark" : "light");
 
-          themeBtn.textContent = dark ? "Light Mode ☀️" : "Dark Mode 🌙";
+          document.getElementById("themeToggle").textContent =
+            dark ? "Light Mode ☀️" : "Dark Mode 🌙";
         });
-      })();
+      }
     </script>
   </body>
 </html>
