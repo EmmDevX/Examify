@@ -31,6 +31,37 @@ module.exports = async function handler(req, res) {
     }
 
     // ─────────────────────────────
+    // GET ATTEMPT (RESULT PAGE FIX)
+    // GET /api/attempts?action=get&id=5
+    // ─────────────────────────────
+    if (req.method === "GET" && action === "get") {
+      const attemptId = id;
+
+      const attempt = await pool.query(
+        `SELECT a.*, q.title as quiz_title, s.name as subject_name
+         FROM attempts a
+         JOIN quizzes q ON a.quiz_id = q.id
+         LEFT JOIN subjects s ON q.subject_id = s.id
+         WHERE a.id=$1`,
+        [attemptId]
+      );
+
+      if (!attempt.rows.length) {
+        return res.status(404).json({ error: "Attempt not found" });
+      }
+
+      const answers = await pool.query(
+        `SELECT * FROM answers WHERE attempt_id=$1`,
+        [attemptId]
+      );
+
+      return res.json({
+        ...attempt.rows[0],
+        answers: answers.rows
+      });
+    }
+
+    // ─────────────────────────────
     // SUBMIT QUIZ
     // POST /api/attempts?action=submit&id=4
     // ─────────────────────────────
