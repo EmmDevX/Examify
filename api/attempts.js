@@ -7,9 +7,12 @@ module.exports = async function handler(req, res) {
  // ─────────────────────────────
 // CREATE ATTEMPT
 // POST /api/attempts
-// ─────────────────────────────
 if (req.method === "POST" && !action) {
   const { quiz_id } = req.body;
+
+  if (!quiz_id) {
+    return res.status(400).json({ error: "quiz_id is required" });
+  }
 
   const qr = await pool.query(
     "SELECT total_questions FROM quizzes WHERE id=$1",
@@ -19,8 +22,6 @@ if (req.method === "POST" && !action) {
   if (!qr.rows.length) {
     return res.status(404).json({ error: "Quiz not found" });
   }
-
-  // ❌ Removed restriction: users can now attempt multiple times
 
   const result = await pool.query(
     `INSERT INTO attempts (user_id, quiz_id, total_questions)
