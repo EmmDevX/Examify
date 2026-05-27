@@ -13,7 +13,7 @@ export default async function handler(req, res) {
     }
 
     const total = await pool.query(
-      "SELECT COUNT(*) FROM attempts WHERE user_id = $1",
+      "SELECT COUNT(*) FROM attempts WHERE user_id=$1",
       [userId]
     );
 
@@ -21,7 +21,7 @@ export default async function handler(req, res) {
       `SELECT ROUND(AVG(score::float / NULLIF(total_questions,0) * 100))
        AS avg_score
        FROM attempts
-       WHERE user_id = $1`,
+       WHERE user_id=$1`,
       [userId]
     );
 
@@ -29,21 +29,10 @@ export default async function handler(req, res) {
       `SELECT MAX(score::float / NULLIF(total_questions,0) * 100)
        AS best_score
        FROM attempts
-       WHERE user_id = $1`,
+       WHERE user_id=$1`,
       [userId]
     );
 
-    res.status(200).json({
-      total_attempts: Number(total.rows[0].count) || 0,
-      avg_score: Number(avg.rows[0].avg_score) || 0,
-      best_score: Number(best.rows[0].best_score) || 0,
-    });
-
-  } catch (err) {
-    console.error("DASHBOARD ERROR:", err);
-
-    res.status(500).json({
-      error: "Server error",
-    });
-  }
-}
+    const recent = await pool.query(
+      `SELECT *
+      
