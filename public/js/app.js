@@ -1,150 +1,85 @@
 const API_BASE_URL = "https://examify25.vercel.app";
 
-async function api(url, options = {}) {
+export async function api(url, options = {}) {
   const res = await fetch(url, {
     method: options.method || "GET",
     headers: {
       "Content-Type": "application/json",
       ...(options.headers || {})
     },
-    credentials: "include", // 🔥 ADD THIS LINE
+    credentials: "include",
     body: options.body ? JSON.stringify(options.body) : undefined
   });
 
+  if (res.status === 401) {
+    window.location.href = "/sign-in.html";
+    return null;
+  }
+
   if (!res.ok) {
-    const err = await res.json().catch(() => ({}));
-    throw new Error(err.error || "Request failed");
+    const err = await res.json().catch(() => ({ error: "Request failed" }));
+    throw new Error(err.error || `Error ${res.status}`);
   }
 
-  return res.json();
+  return await res.json();
 }
 
-    if (res.status === 401) {
-      window.location.href = "/sign-in.html";
-      return null;
-    }
-
-    if (!res.ok) {
-      const err = await res
-        .json()
-        .catch(() => ({ error: "Request failed" }));
-
-      throw new Error(err.error || `Error ${res.status}`);
-    }
-
-    return await res.json();
-
-  } catch (error) {
-
-    console.error("API Error:", error);
-
-    toast(error.message || "Something went wrong", "error");
-
-    return null;
-  }
-}
-
-async function requireAuth() {
-
+export async function requireAuth() {
   try {
+    const res = await fetch(`${API_BASE_URL}/api/auth?action=me`, {
+      credentials: "include"
+    });
 
-    const res = await fetch(
-      `${API_BASE_URL}/api/auth?action=me`,
-      {
-        credentials: "include",
-      }
-    );
-
-    if (res.status === 401) {
-      return null;
-    }
-
-    if (!res.ok) {
-      return null;
-    }
+    if (res.status === 401) return null;
+    if (!res.ok) return null;
 
     return await res.json();
-
   } catch (error) {
-
     console.error("Auth Error:", error);
-
     return null;
   }
 }
 
-async function requireAdminUser() {
-
+export async function requireAdminUser() {
   const user = await requireAuth();
 
   if (!user) return null;
 
   if (user.role !== "admin") {
-
     window.location.href = "/dashboard.html";
-
     return null;
   }
 
   return user;
 }
 
-async function signOut() {
-
+export async function signOut() {
   try {
-
-    await fetch(
-      `${API_BASE_URL}/api/auth?action=logout`,
-      {
-        method: "POST",
-        credentials: "include",
-      }
-    );
+    await fetch(`${API_BASE_URL}/api/auth?action=logout`, {
+      method: "POST",
+      credentials: "include"
+    });
 
     window.location.href = "/sign-in.html";
-
   } catch (error) {
-
     console.error("Logout Error:", error);
-
     toast("Failed to sign out", "error");
   }
 }
 
-function renderSidebar(activePage = "", isAdmin = false) {
-
+export function renderSidebar(activePage = "", isAdmin = false) {
   const pages = [
-    {
-      href: "/dashboard.html",
-      label: "Dashboard",
-      icon: "◫",
-    },
-
-    {
-      href: "/quizzes.html",
-      label: "Quizzes",
-      icon: "📖",
-    },
-
-    {
-      href: "/leaderboard.html",
-      label: "Leaderboard",
-      icon: "🏆",
-    },
-
-    {
-      href: "/profile.html",
-      label: "Profile",
-      icon: "👤",
-    },
+    { href: "/dashboard.html", label: "Dashboard", icon: "◫" },
+    { href: "/quizzes.html", label: "Quizzes", icon: "📖" },
+    { href: "/leaderboard.html", label: "Leaderboard", icon: "🏆" },
+    { href: "/profile.html", label: "Profile", icon: "👤" }
   ];
 
   if (isAdmin) {
-
     pages.push({
       href: "/admin.html",
       label: "Admin Panel",
-      icon: "⚙️",
+      icon: "⚙️"
     });
   }
 
@@ -155,54 +90,38 @@ function renderSidebar(activePage = "", isAdmin = false) {
     </div>
 
     <nav class="sidebar-nav">
-
       ${pages
         .map(
           (p) => `
-          <a
-            href="${p.href}"
-            class="nav-item ${
-              activePage === p.href ? "active" : ""
-            }"
-          >
+          <a href="${p.href}" class="nav-item ${
+            activePage === p.href ? "active" : ""
+          }">
             <span>${p.icon}</span>
             ${p.label}
           </a>
         `
         )
         .join("")}
-
     </nav>
 
     <div class="sidebar-footer">
-
-      <button
-        class="btn btn-secondary"
-        style="width:100%"
-        onclick="signOut()"
-      >
+      <button class="btn btn-secondary" style="width:100%" onclick="signOut()">
         ↩ Sign Out
       </button>
-
     </div>
   `;
 }
 
-function toast(msg, type = "info") {
-
+export function toast(msg, type = "info") {
   let el = document.getElementById("toast");
 
   if (!el) {
-
     el = document.createElement("div");
-
     el.id = "toast";
-
     document.body.appendChild(el);
   }
 
   el.textContent = msg;
-
   el.className = `toast ${type}`;
 
   requestAnimationFrame(() => {
@@ -214,26 +133,17 @@ function toast(msg, type = "info") {
   }, 3000);
 }
 
-function openModal(id) {
-
+export function openModal(id) {
   const modal = document.getElementById(id);
-
-  if (modal) {
-    modal.style.display = "flex";
-  }
+  if (modal) modal.style.display = "flex";
 }
 
-function closeModal(id) {
-
+export function closeModal(id) {
   const modal = document.getElementById(id);
-
-  if (modal) {
-    modal.style.display = "none";
-  }
+  if (modal) modal.style.display = "none";
 }
 
-function loadingHTML(msg = "Loading...") {
-
+export function loadingHTML(msg = "Loading...") {
   return `
     <div class="loading-center">
       <div class="spinner"></div>
