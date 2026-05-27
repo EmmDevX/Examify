@@ -1,6 +1,9 @@
 import { pool } from "../lib/db.js";
 
 export default async function handler(req, res) {
+  const body = typeof req.body === "string" ? JSON.parse(req.body) : req.body;
+
+  const type = req.query.type;
   const type = req.query.type;
 
   try {
@@ -143,10 +146,9 @@ export default async function handler(req, res) {
       return res.json(result.rows);
     }
 
-     if (type === "addQuestion") {
-  const quiz_id = req.query.quiz_id;
-
+    if (type === "addQuestion") {
   const {
+    quiz_id,
     text,
     option_a,
     option_b,
@@ -154,28 +156,27 @@ export default async function handler(req, res) {
     option_d,
     correct_option,
     explanation,
-  } = req.body;
+  } = body;
 
-      const result = await pool.query(
-        `INSERT INTO questions 
-        (quiz_id, text, option_a, option_b, option_c, option_d, correct_option, explanation)
-        VALUES ($1,$2,$3,$4,$5,$6,$7,$8)
-        RETURNING *`,
-        [
-          quiz_id,
-          text,
-          option_a,
-          option_b,
-          option_c,
-          option_d,
-          correct_option,
-          explanation,
-        ],
-      );
+  const result = await pool.query(
+    `INSERT INTO questions 
+    (quiz_id, text, option_a, option_b, option_c, option_d, correct_option, explanation)
+    VALUES ($1,$2,$3,$4,$5,$6,$7,$8)
+    RETURNING *`,
+    [
+      quiz_id,
+      text,
+      option_a,
+      option_b,
+      option_c,
+      option_d,
+      correct_option,
+      explanation,
+    ]
+  );
 
-      return res.json(result.rows[0]);
-    }
-
+  return res.json(result.rows[0]);
+}
     if (type === "deleteQuestion") {
       const { id } = req.query;
 

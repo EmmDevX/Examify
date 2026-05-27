@@ -9,14 +9,29 @@ export default async function handler(req, res) {
     // ALL QUIZZES
     if (!action) {
 
-      const result = await pool.query(`
-        SELECT quizzes.*, subjects.name AS subject_name,
-        subjects.code AS subject_code
-        FROM quizzes
-        LEFT JOIN subjects
-        ON subjects.id = quizzes.subject_id
-        ORDER BY quizzes.id DESC
-      `);
+     const result = await pool.query(`
+  SELECT 
+    q.*,
+    s.name AS subject_name,
+    s.code AS subject_code,
+    COALESCE(COUNT(ques.id), 0) AS question_count
+  FROM quizzes q
+  LEFT JOIN subjects s ON s.id = q.subject_id
+  LEFT JOIN questions ques ON ques.quiz_id = q.id
+  GROUP BY q.id, s.id
+  ORDER BY q.id DESC
+`);const result = await pool.query(`
+  SELECT 
+    q.*,
+    s.name AS subject_name,
+    s.code AS subject_code,
+    COALESCE(COUNT(ques.id), 0) AS question_count
+  FROM quizzes q
+  LEFT JOIN subjects s ON s.id = q.subject_id
+  LEFT JOIN questions ques ON ques.quiz_id = q.id
+  GROUP BY q.id, s.id
+  ORDER BY q.id DESC
+`);
 
       return res.json(result.rows);
     }
