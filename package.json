@@ -2,13 +2,14 @@
   "name": "Examify",
   "version": "1.0.0",
   "description": "Examify - Vercel serverless + Neon",
-  "type": "module",
   "dependencies": {
     "bcryptjs": "^2.4.3",
     "cookie": "^1.1.1",
     "cors": "^2.8.5",
     "dotenv": "^16.6.1",
     "express": "^5.2.1",
+    "express-session": "^1.19.0",
+    "multer": "^2.1.1",
     "pg": "^8.12.0"
   }
 }
