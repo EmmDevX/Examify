@@ -1,5 +1,5 @@
 import * as cookie from "cookie";
-import { pool } from "../../lib/db.js";
+import { pool } from "../../db.js";
 
 export default async function handler(req, res) {
   try {
@@ -7,9 +7,7 @@ export default async function handler(req, res) {
     const userId = cookies.userId;
 
     if (!userId) {
-      return res.status(401).json({
-        error: "Unauthorized",
-      });
+      return res.status(401).json({ error: "Unauthorized" });
     }
 
     const total = await pool.query(
@@ -18,7 +16,7 @@ export default async function handler(req, res) {
     );
 
     const avg = await pool.query(
-      `SELECT ROUND(AVG(score::float / NULLIF(total_questions,0) * 100))
+      `SELECT COALESCE(ROUND(AVG(score::float / NULLIF(total_questions,0) * 100)),0)
        AS avg_score
        FROM attempts
        WHERE user_id=$1`,
@@ -26,13 +24,28 @@ export default async function handler(req, res) {
     );
 
     const best = await pool.query(
-      `SELECT MAX(score::float / NULLIF(total_questions,0) * 100)
+      `SELECT COALESCE(MAX(score::float / NULLIF(total_questions,0) * 100),0)
        AS best_score
        FROM attempts
        WHERE user_id=$1`,
       [userId]
     );
 
-    const recent = await pool.query(
-      `SELECT *
-      
+    return res.status(200).json({
+      total_attempts: parseInt(total.rows[0].count || 0),
+      avg_score: parseInt(avg.rows[0].avg_score || 0),
+      best_score: parseInt(best.rows[0].best_score || 0),
+      subject_scores: [],
+      recent_attempts: [],
+      weekly_streak: 0,
+    });
+
+  } catch (err) {
+    console.error("STATS ERROR:", err);
+
+    return res.status(500).json({
+      error: "Server error",
+      detail: err.message,
+    });
+  }
+}
