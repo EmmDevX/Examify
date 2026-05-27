@@ -29,219 +29,230 @@
 
     <script src="./js/app.js"></script>
 
-<script>
-  const savedTheme = localStorage.getItem("theme");
+    <script>
+      const savedTheme = localStorage.getItem("theme");
 
-  if (savedTheme === "dark") {
-    document.body.classList.add("dark");
-  }
+      if (savedTheme === "dark") {
+        document.body.classList.add("dark");
+      }
 
-  (async () => {
-    const user = await requireAuth();
+      (async () => {
+        const user = await requireAuth();
 
-    if (!user) return;
+        if (!user) return;
 
-    document.getElementById("sidebar").innerHTML = renderSidebar(
-      "/results.html",
-      user.role === "admin"
-    );
+        document.getElementById("sidebar").innerHTML = renderSidebar(
+          "/results.html",
+          user.role === "admin"
+        );
 
-    const attemptId = new URLSearchParams(location.search).get("attempt");
+        const attemptId = new URLSearchParams(location.search).get("attempt");
 
-    if (!attemptId) {
-      location.href = "./quizzes.html";
-      return;
-    }
+        if (!attemptId) {
+          location.href = "./quizzes.html";
+          return;
+        }
 
-    try {
-      // ✅ FIXED LINE (THIS WAS YOUR BUG)
-      const attempt = await api(
-        `/api/attempts?action=get&id=${attemptId}`
-      );
+        try {
+          const attempt = await api(
+            `/api/attempts?action=get&id=${attemptId}`
+          );
 
-      if (!attempt) return;
+          if (!attempt) return;
 
-      const pct = attempt.total_questions
-        ? Math.round((attempt.score / attempt.total_questions) * 100)
-        : 0;
+          // SAFE VALUES
+          const totalQuestions =
+            Number(attempt.total_questions) ||
+            Number(attempt.answers?.length) ||
+            0;
 
-      const passed = pct >= 50;
+          const score = Number(attempt.score) || 0;
 
-      const col =
-        pct >= 60
-          ? "var(--success)"
-          : pct >= 40
-          ? "var(--warning)"
-          : "var(--danger)";
+          const wrong = Math.max(0, totalQuestions - score);
 
-      const dur =
-        attempt.completed_at && attempt.started_at
-          ? Math.round(
-              (new Date(attempt.completed_at) -
-                new Date(attempt.started_at)) /
-                60000
-            )
-          : "—";
+          const pct =
+            totalQuestions > 0
+              ? Math.round((score / totalQuestions) * 100)
+              : 0;
 
-      document.getElementById("content").innerHTML = `
-        <div class="page-header">
-          <div>
-            <div class="page-title">Quiz Results</div>
-            <div class="page-subtitle">
-              Review your performance and answers
-            </div>
-          </div>
+          const passed = pct >= 50;
 
-          <div style="display:flex;gap:10px;align-items:center">
-            <button id="themeToggle" class="btn btn-secondary">
-              ${
-                document.body.classList.contains("dark")
-                  ? "Light Mode ☀️"
-                  : "Dark Mode 🌙"
-              }
-            </button>
+          const col =
+            pct >= 60
+              ? "var(--success)"
+              : pct >= 40
+              ? "var(--warning)"
+              : "var(--danger)";
 
-            <a href="./quizzes.html" class="btn btn-primary">
-              Take Another Quiz →
-            </a>
-          </div>
-        </div>
+          const dur =
+            attempt.completed_at && attempt.started_at
+              ? Math.round(
+                  (new Date(attempt.completed_at) -
+                    new Date(attempt.started_at)) /
+                    60000
+                )
+              : "—";
 
-        <div style="max-width:950px;margin:0 auto">
-
-          <div class="card"
-            style="text-align:center;padding:40px;margin-bottom:24px">
-
-            <div style="
-              width:140px;
-              height:140px;
-              margin:0 auto 20px;
-              border-radius:50%;
-              border:8px solid ${col};
-              display:flex;
-              align-items:center;
-              justify-content:center;
-              font-size:42px;
-              font-weight:800;
-              color:${col};
-              background:rgba(255,255,255,0.03)">
-              ${pct}%
-            </div>
-
-            <div style="font-size:28px;font-weight:800;margin-bottom:8px">
-              ${passed ? "🎉 Passed!" : "📚 Keep Practicing"}
-            </div>
-
-            <div style="color:var(--muted);font-size:15px;margin-bottom:24px">
-              ${attempt.score} correct out of ${attempt.total_questions} questions
-            </div>
-
-            <div class="grid-4" style="gap:16px">
-
-              <div class="stat-card">
-                <div style="font-size:12px;color:var(--muted);margin-bottom:6px">
-                  SCORE
+          document.getElementById("content").innerHTML = `
+            <div class="page-header">
+              <div>
+                <div class="page-title">Quiz Results</div>
+                <div class="page-subtitle">
+                  Review your performance and answers
                 </div>
-                <div style="font-size:28px;font-weight:800;color:${col}">
+              </div>
+
+              <div style="display:flex;gap:10px;align-items:center">
+                <button id="themeToggle" class="btn btn-secondary">
+                  ${
+                    document.body.classList.contains("dark")
+                      ? "Light Mode ☀️"
+                      : "Dark Mode 🌙"
+                  }
+                </button>
+
+                <a href="./quizzes.html" class="btn btn-primary">
+                  Take Another Quiz →
+                </a>
+              </div>
+            </div>
+
+            <div style="max-width:950px;margin:0 auto">
+
+              <div class="card"
+                style="text-align:center;padding:40px;margin-bottom:24px">
+
+                <div style="
+                  width:140px;
+                  height:140px;
+                  margin:0 auto 20px;
+                  border-radius:50%;
+                  border:8px solid ${col};
+                  display:flex;
+                  align-items:center;
+                  justify-content:center;
+                  font-size:42px;
+                  font-weight:800;
+                  color:${col};
+                  background:rgba(255,255,255,0.03)">
                   ${pct}%
                 </div>
+
+                <div style="font-size:28px;font-weight:800;margin-bottom:8px">
+                  ${passed ? "🎉 Passed!" : "📚 Keep Practicing"}
+                </div>
+
+                <div style="color:var(--muted);font-size:15px;margin-bottom:24px">
+                  ${score} correct out of ${totalQuestions} questions
+                </div>
+
+                <div class="grid-4" style="gap:16px">
+
+                  <div class="stat-card">
+                    <div style="font-size:12px;color:var(--muted);margin-bottom:6px">
+                      SCORE
+                    </div>
+                    <div style="font-size:28px;font-weight:800;color:${col}">
+                      ${pct}%
+                    </div>
+                  </div>
+
+                  <div class="stat-card">
+                    <div style="font-size:12px;color:var(--muted);margin-bottom:6px">
+                      CORRECT
+                    </div>
+                    <div style="font-size:28px;font-weight:800;color:var(--success)">
+                      ${score}
+                    </div>
+                  </div>
+
+                  <div class="stat-card">
+                    <div style="font-size:12px;color:var(--muted);margin-bottom:6px">
+                      WRONG
+                    </div>
+                    <div style="font-size:28px;font-weight:800;color:var(--danger)">
+                      ${wrong}
+                    </div>
+                  </div>
+
+                  <div class="stat-card">
+                    <div style="font-size:12px;color:var(--muted);margin-bottom:6px">
+                      TIME
+                    </div>
+                    <div style="font-size:28px;font-weight:800;color:var(--accent)">
+                      ${dur}m
+                    </div>
+                  </div>
+
+                </div>
+
               </div>
 
-              <div class="stat-card">
-                <div style="font-size:12px;color:var(--muted);margin-bottom:6px">
-                  CORRECT
-                </div>
-                <div style="font-size:28px;font-weight:800;color:var(--success)">
-                  ${attempt.score}
-                </div>
-              </div>
+              <div class="card">
 
-              <div class="stat-card">
-                <div style="font-size:12px;color:var(--muted);margin-bottom:6px">
-                  WRONG
+                <div style="font-size:20px;font-weight:700;margin-bottom:20px">
+                  Answer Review
                 </div>
-                <div style="font-size:28px;font-weight:800;color:var(--danger)">
-                  ${attempt.total_questions - attempt.score}
-                </div>
-              </div>
 
-              <div class="stat-card">
-                <div style="font-size:12px;color:var(--muted);margin-bottom:6px">
-                  TIME
-                </div>
-                <div style="font-size:28px;font-weight:800;color:var(--accent)">
-                  ${dur}m
-                </div>
+                ${(attempt.answers || [])
+                  .map(
+                    (a, i) => `
+                    <div style="padding:20px 0;border-bottom:1px solid rgba(42,42,106,0.35)">
+                      <div style="font-size:15px;font-weight:600">
+                        Q${i + 1}. ${a.text}
+                      </div>
+
+                      <div style="margin-top:10px">
+                        Correct: <b>${a.correct_option}</b> |
+                        Your Answer: <b>${a.selected_option}</b>
+                      </div>
+
+                      ${
+                        a.explanation
+                          ? `<div style="margin-top:10px;color:var(--accent)">
+                              💡 ${a.explanation}
+                            </div>`
+                          : ""
+                      }
+                    </div>
+                  `
+                  )
+                  .join("")}
+
               </div>
 
             </div>
+          `;
 
-          </div>
+          document
+            .getElementById("themeToggle")
+            .addEventListener("click", () => {
+              document.body.classList.toggle("dark");
 
-          <div class="card">
+              const isDark = document.body.classList.contains("dark");
 
-            <div style="font-size:20px;font-weight:700;margin-bottom:20px">
-              Answer Review
+              localStorage.setItem("theme", isDark ? "dark" : "light");
+            });
+        } catch (e) {
+          document.getElementById("content").innerHTML = `
+            <div class="card" style="text-align:center;padding:60px">
+              <div style="font-size:48px;margin-bottom:16px">⚠️</div>
+
+              <div style="font-size:18px;font-weight:700;margin-bottom:10px">
+                Failed to load results
+              </div>
+
+              <p style="color:var(--danger)">
+                ${e.message}
+              </p>
+
+              <a href="./quizzes.html" class="btn btn-primary">
+                Back to Quizzes
+              </a>
             </div>
-
-            ${(attempt.answers || [])
-              .map(
-                (a, i) => `
-                <div style="padding:20px 0;border-bottom:1px solid rgba(42,42,106,0.35)">
-                  <div style="font-size:15px;font-weight:600">
-                    Q${i + 1}. ${a.text}
-                  </div>
-
-                  <div style="margin-top:10px">
-                    Correct: <b>${a.correct_option}</b> |
-                    Your Answer: <b>${a.selected_option}</b>
-                  </div>
-
-                  ${
-                    a.explanation
-                      ? `<div style="margin-top:10px;color:var(--accent)">
-                          💡 ${a.explanation}
-                        </div>`
-                      : ""
-                  }
-                </div>
-              `
-              )
-              .join("")}
-
-          </div>
-
-        </div>
-      `;
-
-      document
-        .getElementById("themeToggle")
-        .addEventListener("click", () => {
-          document.body.classList.toggle("dark");
-
-          const isDark = document.body.classList.contains("dark");
-
-          localStorage.setItem("theme", isDark ? "dark" : "light");
-        });
-    } catch (e) {
-      document.getElementById("content").innerHTML = `
-        <div class="card" style="text-align:center;padding:60px">
-          <div style="font-size:48px;margin-bottom:16px">⚠️</div>
-          <div style="font-size:18px;font-weight:700;margin-bottom:10px">
-            Failed to load results
-          </div>
-
-          <p style="color:var(--danger)">
-            ${e.message}
-          </p>
-
-          <a href="./quizzes.html" class="btn btn-primary">
-            Back to Quizzes
-          </a>
-        </div>
-      `;
-    }
-  })();
-</script>
+          `;
+        }
+      })();
+    </script>
   </body>
 </html>
