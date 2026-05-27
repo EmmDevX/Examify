@@ -23,15 +23,7 @@ if (req.method === "POST" && !action) {
     return res.status(404).json({ error: "Quiz not found" });
   }
 
-  const result = await pool.query(
-    `INSERT INTO attempts (user_id, quiz_id, total_questions)
-     VALUES ($1, $2, $3)
-     RETURNING *`,
-    [1, quiz_id, qr.rows[0].total_questions]
-  );
 
-  return res.json(result.rows[0]);
-}
 
       const result = await pool.query(
         `INSERT INTO attempts (user_id, quiz_id, total_questions)
