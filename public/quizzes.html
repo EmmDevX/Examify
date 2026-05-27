@@ -51,7 +51,7 @@ async function loadQuizzes() {
 
   try {
    
-    const quizzes = await api('/api/quizzes' + (subjectId ? `?subject_id=${subjectId}` : ''));
+    const quizzes = await api('./api/quizzes' + (subjectId ? `?subject_id=${subjectId}` : ''));
 
     if (!quizzes || !quizzes.length) {
       grid.innerHTML = '<div class="loading-center" style="grid-column:1/-1;color:var(--muted)">No quizzes available yet. Check back soon!</div>';
@@ -99,7 +99,7 @@ async function loadQuizzes() {
 
   try {
     
-    const subjects = await api('/api/subjects');
+    const subjects = await api('./api/subjects');
 
     if (subjects) {
       const sel = document.getElementById('filter-subject');
