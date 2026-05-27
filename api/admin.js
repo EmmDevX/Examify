@@ -11,7 +11,9 @@ export default async function handler(req, res) {
 
       const attempts = await pool.query("SELECT COUNT(*) FROM attempts");
 
-      const avg = await pool.query("SELECT COALESCE(AVG(score),0) FROM attempts");
+      const avg = await pool.query(
+        "SELECT COALESCE(AVG(score),0) FROM attempts",
+      );
 
       return res.json({
         users: users.rows[0].count,
@@ -81,7 +83,7 @@ export default async function handler(req, res) {
           duration_minutes,
           status,
           scheduled_at,
-        ]
+        ],
       );
 
       return res.json(result.rows[0]);
@@ -116,7 +118,7 @@ export default async function handler(req, res) {
           status,
           scheduled_at,
           id,
-        ]
+        ],
       );
 
       return res.json(result.rows[0]);
@@ -135,13 +137,15 @@ export default async function handler(req, res) {
 
       const result = await pool.query(
         "SELECT * FROM questions WHERE quiz_id=$1 ORDER BY id ASC",
-        [quiz_id]
+        [quiz_id],
       );
 
       return res.json(result.rows);
     }
 
     if (type === "addQuestion") {
+      console.log("QUERY:", req.query);
+      console.log("BODY:", req.body);
       const {
         quiz_id,
         text,
@@ -167,7 +171,7 @@ export default async function handler(req, res) {
           option_d,
           correct_option,
           explanation,
-        ]
+        ],
       );
 
       return res.json(result.rows[0]);
