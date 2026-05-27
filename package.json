@@ -1,7 +1,7 @@
 {
   "name": "Examify",
   "version": "1.0.0",
-  "description": "Examify - Vercel serverless + Neon",
+  "description": "Examify - A comprehensive online examination platform designed to facilitate seamless test creation, administration, and evaluation for educational institutions and organizations.",
   "dependencies": {
     "bcryptjs": "^2.4.3",
     "cookie": "^1.1.1",
