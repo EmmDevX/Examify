@@ -92,22 +92,23 @@ if (req.method === "POST" && !action) {
 
       let score = 0;
 
-      for (const [qid, opt] of Object.entries(answers || {})) {
-        const q = await pool.query(
-          "SELECT correct_option FROM questions WHERE id=$1",
-          [qid]
-        );
+for (const [qid, opt] of Object.entries(answers || {})) {
+  const q = await pool.query(
+    "SELECT correct_option FROM questions WHERE id=$1",
+    [qid]
+  );
 
-        const correct = q.rows[0]?.correct_option === opt;
+  const correct = q.rows[0]?.correct_option === opt;
 
-        if (correct) score++;
+  if (correct) score++;
 
-        await pool.query(
-          `INSERT INTO answers (attempt_id, question_id, selected_option, is_correct)
-           VALUES ($1,$2,$3,$4)
-           ON CONFLICT DO NOTHING`,
-          [attemptId, qid, opt, correct]
-        );
+  await pool.query(
+    `INSERT INTO answers (attempt_id, question_id, selected_option, is_correct)
+     VALUES ($1,$2,$3,$4)
+     ON CONFLICT (attempt_id, question_id) DO NOTHING`,
+    [attemptId, qid, opt, correct]
+  );
+}
       }
 
       const updated = await pool.query(
