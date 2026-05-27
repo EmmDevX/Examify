@@ -99,7 +99,7 @@ async function loadQuizzes() {
 
   try {
     
-    const subjects = await api('./api/subjects');
+    const subjects = await api('/api/subjects');
 
     if (subjects) {
       const sel = document.getElementById('filter-subject');
