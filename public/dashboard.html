@@ -62,7 +62,7 @@
           user.role === "admin",
         );
 
-        let stats = await api("/api/dashboard/stats");
+        let stats = await api("/api/admin?type=stats");
 
         if (!stats) {
           document.getElementById("content").innerHTML = `

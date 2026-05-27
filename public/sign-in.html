@@ -404,7 +404,7 @@
     <script src="./js/app.js"></script>
 
     <script>
-      fetch("/api/auth/me", {
+      fetch("/api/auth?action=me", {
         credentials: "include",
       })
         .then((r) => {
@@ -449,7 +449,7 @@
           `;
 
           try {
-            const res = await fetch("/api/auth/login", {
+            const res = await fetch("/api/auth?action=login", {
               method: "POST",
               credentials: "include",
               headers: {
