@@ -1,21 +1,23 @@
 const API_BASE_URL = "https://examify25.vercel.app";
 
-async function api(path, opts = {}) {
-  try {
-    const res = await fetch(`${API_BASE_URL}${path}`, {
-      method: opts.method || "GET",
-      credentials: "include",
+async function api(url, options = {}) {
+  const res = await fetch(url, {
+    method: options.method || "GET",
+    headers: {
+      "Content-Type": "application/json",
+      ...(options.headers || {})
+    },
+    credentials: "include", // 🔥 ADD THIS LINE
+    body: options.body ? JSON.stringify(options.body) : undefined
+  });
 
-      headers: {
-        "Content-Type": "application/json",
-        ...(opts.headers || {}),
-      },
+  if (!res.ok) {
+    const err = await res.json().catch(() => ({}));
+    throw new Error(err.error || "Request failed");
+  }
 
-      body:
-        opts.body && typeof opts.body === "object"
-          ? JSON.stringify(opts.body)
-          : opts.body,
-    });
+  return res.json();
+}
 
     if (res.status === 401) {
       window.location.href = "/sign-in.html";

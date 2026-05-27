@@ -549,3 +549,108 @@
     padding: 12px;
   }
 }
+/* =========================
+   GLOBAL MOBILE FIXES
+========================= */
+
+html,
+body {
+  overflow-x: hidden;
+}
+
+/* Prevent cards from overflowing */
+.card,
+.stat-card {
+  max-width: 100%;
+}
+
+/* =========================
+   QUIZ PAGE RESPONSIVENESS
+========================= */
+
+.quiz-layout {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 220px;
+  gap: 20px;
+  align-items: start;
+}
+
+/* =========================
+   TABLET VIEW (<= 1024px)
+========================= */
+
+@media (max-width: 1024px) {
+  .quiz-layout {
+    grid-template-columns: minmax(0, 1fr) 180px;
+  }
+}
+
+/* =========================
+   MOBILE VIEW (<= 768px)
+   MAIN FIX
+========================= */
+
+@media (max-width: 768px) {
+  .quiz-layout {
+    grid-template-columns: 1fr !important;
+  }
+
+  /* Right sidebar (question nav) becomes full width */
+  .card-sm {
+    width: 100% !important;
+  }
+
+  /* Question navigation buttons center */
+  #question-nav {
+    justify-content: center;
+  }
+
+  /* Reduce big font sizes slightly */
+  .page-title {
+    font-size: 20px;
+  }
+
+  /* Timer becomes centered and cleaner */
+  #timer {
+    width: 100%;
+    text-align: center;
+    margin-top: 10px;
+  }
+
+  /* Question text readability */
+  #quiz-body div {
+    font-size: 16px !important;
+  }
+}
+
+/* =========================
+   SMALL PHONES (<= 480px)
+========================= */
+
+@media (max-width: 480px) {
+  .quiz-layout {
+    gap: 12px;
+  }
+
+  .option-btn {
+    font-size: 14px;
+    padding: 10px;
+  }
+
+  .option-letter {
+    font-size: 12px;
+  }
+
+  /* Make buttons easier to tap */
+  .btn {
+    padding: 10px 12px;
+    font-size: 14px;
+  }
+
+  /* Question nav smaller circles */
+  #question-nav button {
+    width: 32px;
+    height: 32px;
+    font-size: 11px;
+  }
+}
