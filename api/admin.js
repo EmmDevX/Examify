@@ -1,34 +1,29 @@
-const { pool } = require("../lib/db.js");
+import { pool } from "../lib/db.js";
 
-module.exports = async function handler(req, res) {
+export default async function handler(req, res) {
   try {
     const type = req.query.type;
 
+    // STATS (FIXED FIELD NAMES)
     if (type === "stats") {
       const users = await pool.query("SELECT COUNT(*) FROM users");
       const quizzes = await pool.query("SELECT COUNT(*) FROM quizzes");
       const attempts = await pool.query("SELECT COUNT(*) FROM attempts");
 
       return res.json({
-        users: Number(users.rows[0].count),
-        quizzes: Number(quizzes.rows[0].count),
-        attempts: Number(attempts.rows[0].count),
+        total_students: Number(users.rows[0].count),
+        total_quizzes: Number(quizzes.rows[0].count),
+        total_attempts: Number(attempts.rows[0].count),
+        avg_score: 0,
       });
     }
 
+    // USERS
     if (type === "users") {
       const result = await pool.query(`
         SELECT 
-          id,
-          name,
-          email,
-          role,
-          created_at,
-          (
-            SELECT COUNT(*) 
-            FROM attempts a 
-            WHERE a.user_id = users.id
-          ) AS attempt_count
+          id, name, email, role, created_at,
+          (SELECT COUNT(*) FROM attempts a WHERE a.user_id = users.id) AS attempt_count
         FROM users
         ORDER BY id DESC
       `);
@@ -36,15 +31,14 @@ module.exports = async function handler(req, res) {
       return res.json(result.rows);
     }
 
+    // QUIZZES
     if (type === "quizzes") {
       const result = await pool.query(`
         SELECT 
           q.*,
           s.name AS subject_name,
           (
-            SELECT COUNT(*) 
-            FROM questions 
-            WHERE quiz_id = q.id
+            SELECT COUNT(*) FROM questions WHERE quiz_id = q.id
           ) AS question_count
         FROM quizzes q
         LEFT JOIN subjects s ON q.subject_id = s.id
@@ -54,6 +48,7 @@ module.exports = async function handler(req, res) {
       return res.json(result.rows);
     }
 
+    // CREATE QUIZ
     if (type === "createQuiz") {
       const {
         title,
@@ -69,22 +64,15 @@ module.exports = async function handler(req, res) {
         (title, description, subject_id, duration_minutes, status, scheduled_at)
         VALUES ($1,$2,$3,$4,$5,$6)
         RETURNING *`,
-        [
-          title,
-          description,
-          subject_id,
-          duration_minutes,
-          status,
-          scheduled_at,
-        ]
+        [title, description, subject_id, duration_minutes, status, scheduled_at]
       );
 
       return res.json(result.rows[0]);
     }
 
+    // UPDATE QUIZ
     if (type === "updateQuiz") {
       const { id } = req.query;
-
       const {
         title,
         description,
@@ -104,20 +92,13 @@ module.exports = async function handler(req, res) {
           scheduled_at=$6
         WHERE id=$7
         RETURNING *`,
-        [
-          title,
-          description,
-          subject_id,
-          duration_minutes,
-          status,
-          scheduled_at,
-          id,
-        ]
+        [title, description, subject_id, duration_minutes, status, scheduled_at, id]
       );
 
       return res.json(result.rows[0]);
     }
 
+    // DELETE QUIZ
     if (type === "deleteQuiz") {
       const { id } = req.query;
 
@@ -126,6 +107,7 @@ module.exports = async function handler(req, res) {
       return res.json({ success: true });
     }
 
+    // QUESTIONS
     if (type === "questions") {
       const { quiz_id } = req.query;
 
@@ -137,8 +119,9 @@ module.exports = async function handler(req, res) {
       return res.json(result.rows);
     }
 
+    // ADD QUESTION (FIXED)
     if (type === "addQuestion") {
-      const quiz_id = req.query.quiz_id;
+      const quiz_id = Number(req.body.quiz_id);
 
       const {
         text,
@@ -170,6 +153,7 @@ module.exports = async function handler(req, res) {
       return res.json(result.rows[0]);
     }
 
+    // DELETE QUESTION
     if (type === "deleteQuestion") {
       const { id } = req.query;
 
@@ -178,15 +162,10 @@ module.exports = async function handler(req, res) {
       return res.json({ success: true });
     }
 
-    return res.status(404).json({
-      error: "Invalid type",
-    });
+    return res.status(404).json({ error: "Invalid type" });
 
   } catch (err) {
     console.error(err);
-
-    return res.status(500).json({
-      error: err.message,
-    });
+    return res.status(500).json({ error: err.message });
   }
-};
+}

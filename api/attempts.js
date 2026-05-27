@@ -97,6 +97,19 @@ module.exports = async function handler(req, res) {
           [attemptId, qid, opt, correct]
         );
       }
+      // GET SINGLE ATTEMPT
+if (req.method === "GET" && id) {
+  const result = await pool.query(
+    `SELECT a.*, q.title AS quiz_title, s.name AS subject_name
+     FROM attempts a
+     LEFT JOIN quizzes q ON q.id = a.quiz_id
+     LEFT JOIN subjects s ON s.id = q.subject_id
+     WHERE a.id=$1`,
+    [id]
+  );
+
+  return res.json(result.rows[0]);
+}
 
       const updated = await pool.query(
         `UPDATE attempts
