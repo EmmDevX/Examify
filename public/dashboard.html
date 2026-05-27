@@ -67,7 +67,7 @@ if (savedTheme === 'dark') {
 
   let stats;
   try {stats
-    stats = await api('/api/dashboard/stats');
+    stats = await api('./api/dashboard/stats');
   } catch (e) {
     document.getElementById('content').innerHTML =
       `<p style="color:var(--danger)">Failed to load: ${e.message}</p>`;
