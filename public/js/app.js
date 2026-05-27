@@ -33,7 +33,7 @@ async function api(path, opts = {}) {
 
 async function requireAuth() {
   try {
-    const res = await fetch("/api/auth/me", {
+    const res = await fetch("./api/auth/me", {
       credentials: "include",
     });
 
