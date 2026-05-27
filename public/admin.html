@@ -716,35 +716,83 @@
   loadQuizzes();
 }
       (async () => {
-        const user = await requireAdminUser();
+  try {
+    const user = await requireAdminUser();
+    if (!user) return;
 
-        if (!user) return;
+    // render sidebar immediately (no waiting for API below)
+    document.getElementById("sidebar").innerHTML = renderSidebar(
+      "/admin.html",
+      true
+    );
 
-        document.getElementById("sidebar").innerHTML = renderSidebar(
-          "/admin.html",
-          true,
-        );
+    const select = document.getElementById("q-subject");
 
-        subjects = (await api("/api/subjects")) || [];
+    // run everything in parallel
+    const [subjectsRes, statsRes, quizzesRes, usersRes] =
+      await Promise.all([
+        api("/api/subjects"),
+        api("/api/admin?type=stats"),
+        api("/api/admin?type=quizzes"),
+        api("/api/admin?type=users"),
+      ]);
 
-        const select = document.getElementById("q-subject");
+    // subjects
+    subjects = subjectsRes || [];
+    subjects.forEach((subject) => {
+      const option = document.createElement("option");
+      option.value = subject.id;
+      option.textContent = subject.name;
+      select.appendChild(option);
+    });
 
-        subjects.forEach((subject) => {
-          const option = document.createElement("option");
+    // now render everything (already loaded in background)
+    if (statsRes) {
+      document.getElementById("stats-row").innerHTML = [
+        {
+          label: "Students",
+          value: statsRes.total_students || 0,
+          color: "var(--accent)",
+        },
+        {
+          label: "Quizzes",
+          value: statsRes.total_quizzes || 0,
+          color: "var(--primary)",
+        },
+        {
+          label: "Attempts",
+          value: statsRes.total_attempts || 0,
+          color: "var(--warning)",
+        },
+        {
+          label: "Avg Score",
+          value: `${statsRes.avg_score || 0}%`,
+          color: "var(--success)",
+        },
+      ]
+        .map(
+          (card) => `
+          <div class="stat-card">
+            <div style="font-size:12px;color:var(--muted);margin-bottom:8px;">
+              ${card.label}
+            </div>
+            <div style="font-size:32px;font-weight:800;color:${card.color};">
+              ${card.value}
+            </div>
+          </div>
+        `
+        )
+        .join("");
+    }
 
-          option.value = subject.id;
+    if (quizzesRes) renderQuizzesDirect(quizzesRes);
+    if (usersRes) renderUsersDirect(usersRes);
 
-          option.textContent = subject.name;
-
-          select.appendChild(option);
-        });
-
-        loadStats();
-
-        loadQuizzes();
-
-        loadUsers();
-      })();
+  } catch (err) {
+    console.error(err);
+    toast("Failed to load admin panel", "error");
+  }
+})();
 
       const sidebar = document.getElementById("sidebar");
 
@@ -763,6 +811,80 @@
 
         overlay.classList.remove("active");
       });
+
+      function renderQuizzesDirect(quizzes) {
+  document.getElementById("quiz-list").innerHTML = quizzes.length
+    ? `<div class="card" style="padding:0;overflow:hidden">
+        <table>
+          <thead>
+            <tr>
+              <th>Title</th>
+              <th>Subject</th>
+              <th>Questions</th>
+              <th>Status</th>
+              <th>Actions</th>
+            </tr>
+          </thead>
+          <tbody>
+            ${quizzes.map(q => `
+              <tr>
+                <td>
+                  <div style="font-weight:600">${q.title}</div>
+                  <div style="font-size:12px;color:var(--muted)">
+                    ${q.description || ""}
+                  </div>
+                </td>
+                <td>${q.subject_name || "—"}</td>
+                <td>${q.question_count || 0}</td>
+                <td><span class="badge badge-green">${q.status}</span></td>
+                <td>
+                  <div style="display:flex;gap:6px;flex-wrap:wrap;">
+                    <button class="btn btn-sm btn-secondary"
+                      onclick='editQuiz(${JSON.stringify(q)})'>Edit</button>
+                    <button class="btn btn-sm btn-secondary"
+                      onclick="manageQs(${q.id})">Questions</button>
+                    <button class="btn btn-sm btn-danger"
+                      onclick="deleteQuiz(${q.id})">Delete</button>
+                  </div>
+                </td>
+              </tr>
+            `).join("")}
+          </tbody>
+        </table>
+      </div>`
+    : `<div class="card" style="text-align:center;padding:40px;color:var(--muted)">
+        No quizzes yet
+      </div>`;
+}
+
+function renderUsersDirect(users) {
+  document.getElementById("user-list").innerHTML = `
+    <div class="card" style="padding:0;overflow:hidden">
+      <table>
+        <thead>
+          <tr>
+            <th>Name</th>
+            <th>Email</th>
+            <th>Role</th>
+            <th>Attempts</th>
+            <th>Joined</th>
+          </tr>
+        </thead>
+        <tbody>
+          ${users.map(user => `
+            <tr>
+              <td>${user.name}</td>
+              <td>${user.email}</td>
+              <td>${user.role}</td>
+              <td>${user.attempt_count || 0}</td>
+              <td>${new Date(user.created_at).toLocaleDateString()}</td>
+            </tr>
+          `).join("")}
+        </tbody>
+      </table>
+    </div>
+  `;
+}
     </script>
   </body>
 </html>
