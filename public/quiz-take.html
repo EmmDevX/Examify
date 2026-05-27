@@ -244,9 +244,12 @@
 
         try {
           const [quizRes, questionsRes] = await Promise.all([
-            api(`/api/quizzes/${quizId}`),
-            api(`/api/quizzes/${quizId}/questions`),
-          ]);
+  api(`/api/quizzes?action=single&id=${quizId}`),
+  api(`/api/quizzes?action=questions&id=${quizId}`)
+]);
+
+quiz = quizRes;
+questions = questionsRes || [];
 
           quiz = quizRes;
           questions = questionsRes || [];
