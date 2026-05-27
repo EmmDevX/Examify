@@ -92,13 +92,23 @@ if (req.method === "POST" && !action) {
 
       let score = 0;
 
-for (const [qid, opt] of Object.entries(answers || {})) {
+if (!answers || typeof answers !== "object") {
+  return res.status(400).json({ error: "Invalid answers format" });
+}
+
+for (const [qid, opt] of Object.entries(answers)) {
+  const questionId = Number(qid);
+
+  if (!questionId || !opt) continue;
+
   const q = await pool.query(
     "SELECT correct_option FROM questions WHERE id=$1",
-    [qid]
+    [questionId]
   );
 
-  const correct = q.rows[0]?.correct_option === opt;
+  if (!q.rows.length) continue;
+
+  const correct = q.rows[0].correct_option === opt;
 
   if (correct) score++;
 
@@ -106,10 +116,9 @@ for (const [qid, opt] of Object.entries(answers || {})) {
     `INSERT INTO answers (attempt_id, question_id, selected_option, is_correct)
      VALUES ($1,$2,$3,$4)
      ON CONFLICT (attempt_id, question_id) DO NOTHING`,
-    [attemptId, qid, opt, correct]
+    [attemptId, questionId, opt, correct]
   );
 }
-      }
 
       const updated = await pool.query(
         `UPDATE attempts
