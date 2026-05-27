@@ -1,5 +1,5 @@
 import cookie from "cookie";
-import { pool } from "../../lib/db.js";
+import { pool } from "../db.js";
 
 export default async function handler(req, res) {
   try {
@@ -21,7 +21,7 @@ export default async function handler(req, res) {
 
     return res.status(200).json(result.rows[0]);
   } catch (err) {
-    console.error(err);
-    return res.status(500).json({ error: "Server error" });
+    console.error("ME ERROR:", err);
+    return res.status(500).json({ error: err.message });
   }
 }
