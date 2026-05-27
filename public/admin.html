@@ -270,7 +270,7 @@
       }
 
       async function loadStats() {
-        const stats = await api("/api/admin?action=stats");
+        const stats = await api("/api/admin?type=stats");
 
         if (!stats) return;
 
@@ -330,7 +330,7 @@
       }
 
       async function loadQuizzes() {
-        const quizzes = await api("/api/admin?action=quizzes");
+        const quizzes = await api("/api/admin?type=quizzes");
 
         if (!quizzes) return;
 
@@ -453,7 +453,7 @@
       }
 
       async function loadUsers() {
-        const users = await api("/api/admin?action=users");
+        const users = await api("/api/admin?type=users");
 
         if (!users) return;
 
