@@ -555,12 +555,12 @@
 
         try {
           if (id) {
-            await api(`/api/admin?action=updateQuiz&id=${id}`, {
+            await api(`/api/admin?type=updateQuiz&id=${id}`, {
               method: "PUT",
               body,
             });
           } else {
-            await api("/api/admin?action=createQuiz", {
+            await api("/api/admin?type=createQuiz", {
               method: "POST",
               body,
             });
@@ -582,7 +582,7 @@
         if (!confirm("Delete this quiz?")) return;
 
         try {
-          await api(`/api/admin?action=deleteQuiz&id=${id}`, {
+          await api(`/api/admin?type=deleteQuiz&id=${id}`, {
             method: "DELETE",
           });
 
@@ -605,7 +605,7 @@
       }
 
       async function refreshQs(quizId) {
-        const qs = await api(`/api/admin?action=questions&quiz_id=${quizId}`);
+        const qs = await api(`/api/admin?type=questions&quiz_id=${quizId}`);
 
         if (!qs) return;
 
@@ -693,7 +693,7 @@
         const quizId = document.getElementById("aq-quiz-id").value;
 
         try {
-          await api(`/api/admin?action=addQuestion&quiz_id=${quizId}`, {
+          await api(`/api/admin?type=addQuestion&quiz_id=${quizId}`, {
             method: "POST",
 
             body: {
@@ -729,7 +729,7 @@
         if (!confirm("Delete question?")) return;
 
         try {
-          await api(`/api/admin?action=deleteQuestion&id=${id}`, {
+          await api(`/api/admin?type=deleteQuestion&id=${id}`, {
             method: "DELETE",
           });
 
