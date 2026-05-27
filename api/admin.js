@@ -1,6 +1,6 @@
-import { pool } from "../lib/db.js";
+const { pool } = require("../lib/db.js");
 
-export default async function handler(req, res) {
+module.exports = async function handler(req, res) {
    
 
   const body = typeof req.body === "string"
