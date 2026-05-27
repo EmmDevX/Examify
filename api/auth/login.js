@@ -1,6 +1,6 @@
 import bcrypt from "bcryptjs";
-import { pool } from "../../lib/db.js";
 import * as cookie from "cookie";
+import { pool } from "../../lib/db.js";
 
 export default async function handler(req, res) {
   try {
@@ -9,10 +9,6 @@ export default async function handler(req, res) {
     }
 
     const { email, password } = req.body;
-
-    if (!email || !password) {
-      return res.status(400).json({ error: "Missing fields" });
-    }
 
     const result = await pool.query(
       "SELECT * FROM users WHERE email = $1",
@@ -35,9 +31,9 @@ export default async function handler(req, res) {
       "Set-Cookie",
       cookie.serialize("userId", String(user.id), {
         httpOnly: true,
-        path: "/",
-        sameSite: "none",
         secure: true,
+        sameSite: "none",
+        path: "/",
         maxAge: 60 * 60 * 24 * 7,
       })
     );
@@ -52,8 +48,7 @@ export default async function handler(req, res) {
     console.error("LOGIN ERROR:", err);
 
     return res.status(500).json({
-      error: "Login failed",
-      detail: err.message,
+      error: err.message,
     });
   }
 }
