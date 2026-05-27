@@ -1,34 +1,24 @@
 const { pool } = require("../lib/db.js");
 
-module.exports = async function handler(req, res) {
-   
+import { pool } from "../lib/db.js";
 
-  const body = typeof req.body === "string"
-    ? JSON.parse(req.body)
-    : req.body;
-
-  const type = req.query.type;
+export default async function handler(req, res) {
   const type = req.query.type;
 
-  try {
-    if (type === "stats") {
-      const users = await pool.query("SELECT COUNT(*) FROM users");
+  if (type === "stats") {
+    const users = await pool.query("SELECT COUNT(*) FROM users");
+    const quizzes = await pool.query("SELECT COUNT(*) FROM quizzes");
+    const attempts = await pool.query("SELECT COUNT(*) FROM attempts");
 
-      const quizzes = await pool.query("SELECT COUNT(*) FROM quizzes");
+    return res.json({
+      users: Number(users.rows[0].count),
+      quizzes: Number(quizzes.rows[0].count),
+      attempts: Number(attempts.rows[0].count),
+    });
+  }
 
-      const attempts = await pool.query("SELECT COUNT(*) FROM attempts");
-
-      const avg = await pool.query(
-        "SELECT COALESCE(AVG(score),0) FROM attempts",
-      );
-
-      return res.json({
-        users: users.rows[0].count,
-        quizzes: quizzes.rows[0].count,
-        attempts: attempts.rows[0].count,
-        avg_score: Math.round(avg.rows[0].coalesce || avg.rows[0].avg || 0),
-      });
-    }
+  res.status(404).json({ error: "Invalid type" });
+}
 
     if (type === "users") {
       const result = await pool.query(`

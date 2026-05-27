@@ -1,19 +1,13 @@
 {
   "name": "Examify",
   "version": "1.0.0",
-  "description": "Examify - plain HTML/CSS/JS + Express backend",
-  "main": "server.js",
-  "scripts": {
-    "start": "node server.js"
-  },
+  "description": "Examify - Vercel serverless + Neon",
+  "type": "module",
   "dependencies": {
     "bcryptjs": "^2.4.3",
     "cookie": "^1.1.1",
     "cors": "^2.8.5",
     "dotenv": "^16.6.1",
-    "express": "^4.19.2",
-    "express-session": "^1.18.0",
-    "multer": "^1.4.5-lts.1",
     "pg": "^8.12.0"
   }
 }
