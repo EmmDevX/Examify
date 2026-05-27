@@ -677,22 +677,19 @@
       }
 
       function openAddQ(quizId) {
-        console.log("OPEN ADD Q:", quizId);
-
-        currentQuizId = Number(quizId);
-
-        openModal("add-q-modal");
-      }
+  currentQuizId = Number(quizId);
+  openModal("add-q-modal");
+}
 
       async function saveQuestion(e) {
         e.preventDefault();
 
-        const quizId = currentQuizId;
+         const quizId = currentQuizId;
 
-        if (!quizId) {
-          toast("Quiz not selected", "error");
-          return;
-        }
+if (!quizId) {
+  toast("Quiz not selected", "error");
+  return;
+}
 
         const body = {
           text: document.getElementById("aq-text").value,

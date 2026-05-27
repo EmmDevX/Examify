@@ -144,8 +144,10 @@ export default async function handler(req, res) {
     }
 
     if (type === "addQuestion") {
-      console.log("QUERY:", req.query);
-      console.log("BODY:", req.body);
+      console.log("ADD QUESTION REQUEST");
+      console.log("quiz_id:", req.query.quiz_id);
+      console.log("body:", req.body);
+
       const {
         quiz_id,
         text,
