@@ -84,14 +84,18 @@
               ? "var(--warning)"
               : "var(--danger)";
 
-          const dur =
-            attempt.completed_at && attempt.started_at
-              ? Math.round(
-                  (new Date(attempt.completed_at) -
-                    new Date(attempt.started_at)) /
-                    60000
-                )
-              : "—";
+            let dur = "0";
+
+if (attempt.completed_at && attempt.started_at) {
+  dur = Math.max(
+    1,
+    Math.round(
+      (new Date(attempt.completed_at) -
+        new Date(attempt.started_at)) /
+        60000
+    )
+  );
+}
 
           document.getElementById("content").innerHTML = `
             <div class="page-header">
@@ -194,31 +198,53 @@
                   Answer Review
                 </div>
 
-                ${(attempt.answers || [])
-                  .map(
-                    (a, i) => `
-                    <div style="padding:20px 0;border-bottom:1px solid rgba(42,42,106,0.35)">
-                      <div style="font-size:15px;font-weight:600">
-                        Q${i + 1}. ${a.text}
-                      </div>
+               ${(attempt.answers || [])
+  .map((a, i) => {
+    const question =
+      a.text ||
+      a.question ||
+      a.question_text ||
+      "Question unavailable";
 
-                      <div style="margin-top:10px">
-                        Correct: <b>${a.correct_option}</b> |
-                        Your Answer: <b>${a.selected_option}</b>
-                      </div>
+    const correct =
+      a.correct_option ||
+      a.correct_answer ||
+      a.correctAnswer ||
+      "N/A";
 
-                      ${
-                        a.explanation
-                          ? `<div style="margin-top:10px;color:var(--accent)">
-                              💡 ${a.explanation}
-                            </div>`
-                          : ""
-                      }
-                    </div>
-                  `
-                  )
-                  .join("")}
+    const selected =
+      a.selected_option ||
+      a.selected_answer ||
+      a.selectedAnswer ||
+      a.user_answer ||
+      "Not Answered";
 
+    return `
+      <div style="padding:20px 0;border-bottom:1px solid rgba(42,42,106,0.35)">
+        
+        <div style="font-size:15px;font-weight:600">
+          Q${i + 1}. ${question}
+        </div>
+
+        <div style="margin-top:10px">
+          Correct: <b>${correct}</b> |
+          Your Answer: <b>${selected}</b>
+        </div>
+
+        ${
+          a.explanation
+            ? `
+            <div style="margin-top:10px;color:var(--accent)">
+              💡 ${a.explanation}
+            </div>
+          `
+            : ""
+        }
+
+      </div>
+    `;
+  })
+  .join("")}
               </div>
 
             </div>
