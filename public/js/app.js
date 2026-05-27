@@ -5,7 +5,11 @@ const API_BASE_URL = "https://examify25.vercel.app";
 ========================= */
 async function api(url, options = {}) {
   try {
-    const res = await fetch(url, {
+    const fullUrl = url.startsWith("http")
+      ? url
+      : `${API_BASE_URL}${url}`;
+
+    const res = await fetch(fullUrl, {
       method: options.method || "GET",
       headers: {
         "Content-Type": "application/json",
