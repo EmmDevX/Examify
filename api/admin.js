@@ -1,24 +1,20 @@
 const { pool } = require("../lib/db.js");
 
-import { pool } from "../lib/db.js";
+module.exports = async function handler(req, res) {
+  try {
+    const type = req.query.type;
 
-export default async function handler(req, res) {
-  const type = req.query.type;
+    if (type === "stats") {
+      const users = await pool.query("SELECT COUNT(*) FROM users");
+      const quizzes = await pool.query("SELECT COUNT(*) FROM quizzes");
+      const attempts = await pool.query("SELECT COUNT(*) FROM attempts");
 
-  if (type === "stats") {
-    const users = await pool.query("SELECT COUNT(*) FROM users");
-    const quizzes = await pool.query("SELECT COUNT(*) FROM quizzes");
-    const attempts = await pool.query("SELECT COUNT(*) FROM attempts");
-
-    return res.json({
-      users: Number(users.rows[0].count),
-      quizzes: Number(quizzes.rows[0].count),
-      attempts: Number(attempts.rows[0].count),
-    });
-  }
-
-  res.status(404).json({ error: "Invalid type" });
-}
+      return res.json({
+        users: Number(users.rows[0].count),
+        quizzes: Number(quizzes.rows[0].count),
+        attempts: Number(attempts.rows[0].count),
+      });
+    }
 
     if (type === "users") {
       const result = await pool.query(`
@@ -80,7 +76,7 @@ export default async function handler(req, res) {
           duration_minutes,
           status,
           scheduled_at,
-        ],
+        ]
       );
 
       return res.json(result.rows[0]);
@@ -88,6 +84,7 @@ export default async function handler(req, res) {
 
     if (type === "updateQuiz") {
       const { id } = req.query;
+
       const {
         title,
         description,
@@ -115,7 +112,7 @@ export default async function handler(req, res) {
           status,
           scheduled_at,
           id,
-        ],
+        ]
       );
 
       return res.json(result.rows[0]);
@@ -134,24 +131,24 @@ export default async function handler(req, res) {
 
       const result = await pool.query(
         "SELECT * FROM questions WHERE quiz_id=$1 ORDER BY id ASC",
-        [quiz_id],
+        [quiz_id]
       );
 
       return res.json(result.rows);
     }
 
-     if (type === "addQuestion") {
-  const quiz_id = req.query.quiz_id;
+    if (type === "addQuestion") {
+      const quiz_id = req.query.quiz_id;
 
-  const {
-    text,
-    option_a,
-    option_b,
-    option_c,
-    option_d,
-    correct_option,
-    explanation,
-  } = req.body;
+      const {
+        text,
+        option_a,
+        option_b,
+        option_c,
+        option_d,
+        correct_option,
+        explanation,
+      } = req.body;
 
       const result = await pool.query(
         `INSERT INTO questions 
@@ -167,7 +164,7 @@ export default async function handler(req, res) {
           option_d,
           correct_option,
           explanation,
-        ],
+        ]
       );
 
       return res.json(result.rows[0]);
@@ -184,9 +181,12 @@ export default async function handler(req, res) {
     return res.status(404).json({
       error: "Invalid type",
     });
+
   } catch (err) {
+    console.error(err);
+
     return res.status(500).json({
       error: err.message,
     });
   }
-}
+};
