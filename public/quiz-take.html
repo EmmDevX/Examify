@@ -84,7 +84,13 @@ async function submitQuiz() {
   try {
     [quiz, questions] = await Promise.all([api(`/api/quizzes/${quizId}`), api(`/api/quizzes/${quizId}/questions`)]);
     if (!questions || !questions.length) { alert('This quiz has no questions yet.'); location.href='./quizzes.html'; return; }
-    const attempt = await api('/api/attempts', { method:'POST', body:{ quiz_id:parseInt(quizId) } });
+    const attempt = await api('/api/attempts', {
+  method: 'POST',
+  body: {
+    quiz_id: parseInt(quizId),
+    user_id: user.id
+  }
+});
     if (!attempt) return;
     attemptId = attempt.id;
     timeLeft = quiz.duration_minutes * 60;
