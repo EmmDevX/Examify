@@ -2,7 +2,6 @@ import cookie from "cookie";
 import { pool } from "../../lib/db.js";
 
 export default async function handler(req, res) {
-  console.log("ENV CHECK:", process.env.DATABASE_URL);
   try {
     const cookies = cookie.parse(req.headers.cookie || "");
     const userId = cookies.userId;
@@ -21,8 +20,12 @@ export default async function handler(req, res) {
     }
 
     return res.status(200).json(result.rows[0]);
+
   } catch (err) {
     console.error("ME ERROR:", err);
-    return res.status(500).json({ error: err.message });
+
+    return res.status(500).json({
+      error: err.message
+    });
   }
 }
