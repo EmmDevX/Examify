@@ -1,44 +1,29 @@
-import { pool } from "../lib/db.js";
+const { pool } = require("../lib/db");
 
-export default async function handler(req, res) {
-
+module.exports = async function handler(req, res) {
   const action = req.query.action;
 
   try {
-
     // ALL QUIZZES
     if (!action) {
-
-     const result = await pool.query(`
-  SELECT 
-    q.*,
-    s.name AS subject_name,
-    s.code AS subject_code,
-    COALESCE(COUNT(ques.id), 0) AS question_count
-  FROM quizzes q
-  LEFT JOIN subjects s ON s.id = q.subject_id
-  LEFT JOIN questions ques ON ques.quiz_id = q.id
-  GROUP BY q.id, s.id
-  ORDER BY q.id DESC
-`);const result = await pool.query(`
-  SELECT 
-    q.*,
-    s.name AS subject_name,
-    s.code AS subject_code,
-    COALESCE(COUNT(ques.id), 0) AS question_count
-  FROM quizzes q
-  LEFT JOIN subjects s ON s.id = q.subject_id
-  LEFT JOIN questions ques ON ques.quiz_id = q.id
-  GROUP BY q.id, s.id
-  ORDER BY q.id DESC
-`);
+      const result = await pool.query(`
+        SELECT 
+          q.*,
+          s.name AS subject_name,
+          s.code AS subject_code,
+          COALESCE(COUNT(ques.id), 0) AS question_count
+        FROM quizzes q
+        LEFT JOIN subjects s ON s.id = q.subject_id
+        LEFT JOIN questions ques ON ques.quiz_id = q.id
+        GROUP BY q.id, s.id
+        ORDER BY q.id DESC
+      `);
 
       return res.json(result.rows);
     }
 
     // SINGLE QUIZ
     if (action === "single") {
-
       const id = req.query.id;
 
       const result = await pool.query(
@@ -51,7 +36,6 @@ export default async function handler(req, res) {
 
     // QUESTIONS
     if (action === "questions") {
-
       const id = req.query.id;
 
       const result = await pool.query(
@@ -67,11 +51,10 @@ export default async function handler(req, res) {
     });
 
   } catch (err) {
-
     console.error(err);
 
     return res.status(500).json({
       error: err.message,
     });
   }
-}
+};
