@@ -1,26 +1,67 @@
 import { pool } from "../lib/db.js";
 
 export default async function handler(req, res) {
-  if (req.method !== "POST") {
-    return res.status(405).json({ error: "Method not allowed" });
-  }
+
+  const action = req.query.action;
 
   try {
-    const { user_id, quiz_id, score, total_questions } = req.body;
 
-    if (!user_id || !quiz_id) {
-      return res.status(400).json({ error: "Missing fields" });
+    // CREATE ATTEMPT
+    if (action === "create") {
+
+      const { quiz_id } = req.body;
+
+      const result = await pool.query(
+        `INSERT INTO attempts(quiz_id)
+         VALUES($1)
+         RETURNING *`,
+        [quiz_id]
+      );
+
+      return res.json(result.rows[0]);
     }
 
-    await pool.query(
-      `INSERT INTO attempts (user_id, quiz_id, score, total_questions)
-       VALUES ($1, $2, $3, $4)`,
-      [user_id, quiz_id, score, total_questions]
-    );
+    // SUBMIT QUIZ
+    if (action === "submit") {
 
-    res.status(200).json({ message: "Attempt saved" });
+      const id = req.query.id;
+
+      const { answers } = req.body;
+
+      const questions = await pool.query(
+        "SELECT * FROM questions WHERE quiz_id=(SELECT quiz_id FROM attempts WHERE id=$1)",
+        [id]
+      );
+
+      let score = 0;
+
+      questions.rows.forEach((q) => {
+        if (answers[q.id] === q.correct_option) {
+          score++;
+        }
+      });
+
+      await pool.query(
+        "UPDATE attempts SET score=$1, completed_at=NOW() WHERE id=$2",
+        [score, id]
+      );
+
+      return res.json({
+        id,
+        score,
+      });
+    }
+
+    return res.status(404).json({
+      error: "Invalid action",
+    });
+
   } catch (err) {
+
     console.error(err);
-    res.status(500).json({ error: err.message });
+
+    return res.status(500).json({
+      error: err.message,
+    });
   }
 }

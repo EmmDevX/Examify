@@ -1,139 +1,298 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
-<head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Leaderboard — Examify</title>
-  <link rel="stylesheet" href="./css/style.css" />
-  <link rel="stylesheet" href="./css/dashboard.css" />
-   <link rel="icon" type="image/png" href="./favicon.png">
-</head>
-<body>
-     <!-- MOBILE MENU BUTTON -->
-  <button class="mobile-menu-btn" id="menuBtn">
-    ☰
-  </button>
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Leaderboard — Examify</title>
 
-  <!-- OVERLAY -->
-  <div class="sidebar-overlay" id="overlay"></div>
-<div class="app-shell">
-  <aside class="sidebar" id="sidebar"></aside>
-  <main class="main-content">
-    
-    <div class="page-header">
-      
-      <div>
-        <div class="page-title">🏆 Global Leaderboard</div>
-        <div class="page-subtitle">See how you rank against other candidates</div>
-      </div>
+    <link rel="icon" type="image/png" href="./favicon.png" />
+    <link rel="stylesheet" href="./css/style.css" />
+    <link rel="stylesheet" href="./css/dashboard.css" />
+  </head>
+
+  <body>
+    <button class="mobile-menu-btn" id="menuBtn">☰</button>
+
+    <div class="sidebar-overlay" id="overlay"></div>
+
+    <div class="app-shell">
+      <aside class="sidebar" id="sidebar"></aside>
+
+      <main class="main-content">
+        <div class="page-header">
+          <div>
+            <div class="page-title">🏆 Global Leaderboard</div>
+            <div class="page-subtitle">
+              See how you rank against other candidates
+            </div>
+          </div>
+
+          <a href="./quizzes.html" class="btn btn-primary"> Take Quiz → </a>
+        </div>
+
+        <div id="content">
+          <div class="loading-center">
+            <div class="spinner"></div>
+            <p>Loading leaderboard...</p>
+          </div>
+        </div>
+      </main>
     </div>
-    <div id="content"><div class="loading-center"><div class="spinner"></div></div></div>
-  </main>
-</div>
-<script src="./js/app.js"></script>
-<script>
-   
-(async () => {
-  const user = await requireAuth();
-  if (!user) return;
 
-  document.getElementById('sidebar').innerHTML =
-    renderSidebar('/leaderboard.html', user.role === 'admin');
-    
+    <script src="./js/app.js"></script>
 
-  try {
-   
-    const board = await api('/api/leaderboard');
+    <script>
+      const savedTheme = localStorage.getItem("theme");
 
-    const medal = r => r === 1 ? '🥇' : r === 2 ? '🥈' : r === 3 ? '🥉' : '#' + r;
+      if (savedTheme === "dark") {
+        document.body.classList.add("dark");
+      }
 
-    document.getElementById('content').innerHTML = board.length ? `
+      const sidebar = document.getElementById("sidebar");
+      const menuBtn = document.getElementById("menuBtn");
+      const overlay = document.getElementById("overlay");
+
+      menuBtn.addEventListener("click", () => {
+        sidebar.classList.toggle("active");
+        overlay.classList.toggle("active");
+      });
+
+      overlay.addEventListener("click", () => {
+        sidebar.classList.remove("active");
+        overlay.classList.remove("active");
+      });
+
+      function medal(rank) {
+        if (rank === 1) return "🥇";
+        if (rank === 2) return "🥈";
+        if (rank === 3) return "🥉";
+        return "#" + rank;
+      }
+
+      (async () => {
+        const user = await requireAuth();
+
+        if (!user) return;
+
+        document.getElementById("sidebar").innerHTML = renderSidebar(
+          "/leaderboard.html",
+          user.role === "admin",
+        );
+
+        try {
+          const board = await api("/api/leaderboard");
+
+          if (!board) {
+            document.getElementById("content").innerHTML = `
+        <div class="card" style="padding:40px;text-align:center">
+          <p style="color:var(--danger)">
+            Failed to load leaderboard
+          </p>
+        </div>
+      `;
+            return;
+          }
+
+          if (!board.length) {
+            document.getElementById("content").innerHTML = `
+        <div class="card" style="text-align:center;padding:60px">
+
+          <div style="font-size:52px;margin-bottom:16px">
+            🏆
+          </div>
+
+          <div style="font-size:22px;font-weight:700;margin-bottom:10px">
+            No rankings yet
+          </div>
+
+          <p style="color:var(--muted);margin-bottom:22px">
+            Be the first student to complete a quiz.
+          </p>
+
+          <a href="./quizzes.html" class="btn btn-primary">
+            Start Quiz
+          </a>
+
+        </div>
+      `;
+
+            return;
+          }
+
+          document.getElementById("content").innerHTML = `
+
       <div class="card" style="padding:0;overflow:hidden">
+
         <table>
-          <thead><tr>
-            <th>Rank</th><th>Student</th><th>School</th>
-            <th>Quizzes</th><th>Avg Score</th><th>Best Score</th>
-          </tr></thead>
+
+          <thead>
+            <tr>
+              <th>Rank</th>
+              <th>Student</th>
+              <th>School</th>
+              <th>Attempts</th>
+              <th>Average</th>
+              <th>Best</th>
+            </tr>
+          </thead>
 
           <tbody>
-            ${board.map((u, i) => {
-              const rank = i + 1;
-              const me = u.id === user.id;
 
-              return `
-              <tr style="${me ? 'background:rgba(91,61,232,0.09)' : ''}">
-                <td>
-                  <span style="font-size:${rank <= 3 ? '20px' : '14px'};
-                    font-weight:700;
-                    color:${rank === 1 ? '#fbbf24' : rank === 2 ? '#94a3b8' : rank === 3 ? '#d97706' : 'var(--muted)'}">
-                    ${medal(rank)}
-                  </span>
-                </td>
+            ${board
+              .map((u, index) => {
+                const rank = index + 1;
+                const isMe = Number(u.id) === Number(user.id);
 
-                <td>
-                  <div style="display:flex;align-items:center;gap:10px">
-                    <div style="width:36px;height:36px;border-radius:50%;background:var(--primary);
-                      display:flex;align-items:center;justify-content:center;font-weight:700;font-size:14px;flex-shrink:0">
-                      ${u.name?.[0]?.toUpperCase() || '?'}
+                return `
+
+                <tr style="${isMe ? "background:rgba(91,61,232,0.10)" : ""}">
+
+                  <td>
+
+                    <div style="
+                      font-size:${rank <= 3 ? "22px" : "14px"};
+                      font-weight:700;
+                      color:
+                        ${
+                          rank === 1
+                            ? "#fbbf24"
+                            : rank === 2
+                              ? "#cbd5e1"
+                              : rank === 3
+                                ? "#fb923c"
+                                : "var(--muted)"
+                        };
+                    ">
+                      ${medal(rank)}
                     </div>
 
-                    <div style="font-weight:600">
-                      ${u.name}
-                      ${me ? `<span class="badge badge-blue" style="margin-left:4px;font-size:10px">You</span>` : ''}
-                    </div>
-                  </div>
-                </td>
+                  </td>
 
-                <td style="color:var(--muted);font-size:13px">${u.school || '—'}</td>
-                <td>${u.attempts}</td>
-                <td><b style="color:var(--primary)">${u.avg_score || 0}%</b></td>
-                <td><b style="color:var(--success)">${Math.round(u.best_score || 0)}%</b></td>
-              </tr>`;
-            }).join('')}
+                  <td>
+
+                    <div style="
+                      display:flex;
+                      align-items:center;
+                      gap:12px;
+                    ">
+
+                      <div style="
+                        width:40px;
+                        height:40px;
+                        border-radius:50%;
+                        background:var(--primary);
+                        display:flex;
+                        align-items:center;
+                        justify-content:center;
+                        font-weight:700;
+                        color:white;
+                        flex-shrink:0;
+                      ">
+                        ${(u.name || "?").charAt(0).toUpperCase()}
+                      </div>
+
+                      <div>
+
+                        <div style="
+                          font-weight:700;
+                          display:flex;
+                          align-items:center;
+                          gap:6px;
+                        ">
+
+                          ${u.name || "Unknown"}
+
+                          ${
+                            isMe
+                              ? `<span class="badge badge-blue" style="font-size:10px">You</span>`
+                              : ""
+                          }
+
+                        </div>
+
+                        <div style="
+                          font-size:12px;
+                          color:var(--muted);
+                        ">
+                          ${u.email || ""}
+                        </div>
+
+                      </div>
+
+                    </div>
+
+                  </td>
+
+                  <td style="
+                    color:var(--muted);
+                    font-size:13px;
+                  ">
+                    ${u.school || "—"}
+                  </td>
+
+                  <td>
+                    ${u.attempts || 0}
+                  </td>
+
+                  <td>
+                    <span style="
+                      font-weight:700;
+                      color:var(--primary);
+                    ">
+                      ${Math.round(u.avg_score || 0)}%
+                    </span>
+                  </td>
+
+                  <td>
+                    <span style="
+                      font-weight:700;
+                      color:var(--success);
+                    ">
+                      ${Math.round(u.best_score || 0)}%
+                    </span>
+                  </td>
+
+                </tr>
+
+              `;
+              })
+              .join("")}
+
           </tbody>
+
         </table>
+
       </div>
-    ` : `
-      <div class="card" style="text-align:center;padding:60px">
-        <div style="font-size:48px;margin-bottom:16px">🏆</div>
-        <div style="font-size:18px;font-weight:700;margin-bottom:8px">No rankings yet</div>
-        <p style="color:var(--muted);margin-bottom:20px">Be the first to complete a quiz!</p>
-        <a href="./quizzes.html" class="btn btn-primary">Take a Quiz</a>
-      </div>`;
 
-  } catch (e) {
-    document.getElementById('content').innerHTML =
-      `<p style="color:var(--danger)">Failed to load leaderboard: ${e.message}</p>`;
-  }
-})();
+    `;
+        } catch (error) {
+          console.error(error);
 
-/* =========================
-   THEME SETUP (BEFORE LOAD)
-========================= */
-const savedTheme = localStorage.getItem('theme');
-if (savedTheme === 'dark') {
-  document.body.classList.add('dark');
-}
+          document.getElementById("content").innerHTML = `
 
-      /* =========================
-       MOBILE SIDEBAR
-    ========================= */
+      <div class="card" style="padding:40px;text-align:center">
 
-    const sidebar = document.getElementById("sidebar");
-    const menuBtn = document.getElementById("menuBtn");
-    const overlay = document.getElementById("overlay");
+        <div style="font-size:40px;margin-bottom:12px">
+          ⚠️
+        </div>
 
-    menuBtn.addEventListener("click", () => {
-      sidebar.classList.toggle("active");
-      overlay.classList.toggle("active");
-    });
+        <div style="
+          font-size:18px;
+          font-weight:700;
+          margin-bottom:8px;
+        ">
+          Failed to load leaderboard
+        </div>
 
-    overlay.addEventListener("click", () => {
-      sidebar.classList.remove("active");
-      overlay.classList.remove("active");
-    });
+        <p style="color:var(--muted)">
+          ${error.message}
+        </p>
 
-</script>
+      </div>
 
-</body>
+    `;
+        }
+      })();
+    </script>
+  </body>
 </html>

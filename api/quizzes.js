@@ -1,30 +1,62 @@
 import { pool } from "../lib/db.js";
 
 export default async function handler(req, res) {
+
+  const action = req.query.action;
+
   try {
-    const { subject_id } = req.query;
 
-    let query = `
-      SELECT qz.*, s.name AS subject_name, s.code AS subject_code
-      FROM quizzes qz
-      LEFT JOIN subjects s ON qz.subject_id = s.id
-      WHERE qz.status = 'published'
-    `;
+    // ALL QUIZZES
+    if (!action) {
 
-    const params = [];
+      const result = await pool.query(`
+        SELECT quizzes.*, subjects.name AS subject_name,
+        subjects.code AS subject_code
+        FROM quizzes
+        LEFT JOIN subjects
+        ON subjects.id = quizzes.subject_id
+        ORDER BY quizzes.id DESC
+      `);
 
-    if (subject_id) {
-      params.push(subject_id);
-      query += ` AND qz.subject_id = $${params.length}`;
+      return res.json(result.rows);
     }
 
-    query += " ORDER BY qz.created_at DESC";
+    // SINGLE QUIZ
+    if (action === "single") {
 
-    const result = await pool.query(query, params);
+      const id = req.query.id;
 
-    res.status(200).json(result.rows);
+      const result = await pool.query(
+        "SELECT * FROM quizzes WHERE id=$1",
+        [id]
+      );
+
+      return res.json(result.rows[0]);
+    }
+
+    // QUESTIONS
+    if (action === "questions") {
+
+      const id = req.query.id;
+
+      const result = await pool.query(
+        "SELECT * FROM questions WHERE quiz_id=$1",
+        [id]
+      );
+
+      return res.json(result.rows);
+    }
+
+    return res.status(404).json({
+      error: "Invalid action",
+    });
+
   } catch (err) {
+
     console.error(err);
-    res.status(500).json({ error: "Server error" });
+
+    return res.status(500).json({
+      error: err.message,
+    });
   }
 }

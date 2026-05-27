@@ -1,178 +1,424 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
-<head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Profile — Examify</title>
-  <link rel="stylesheet" href="./css/style.css" />
-  <link rel="stylesheet" href="./css/dashboard.css" />
-   <link rel="icon" type="image/png" href="./favicon.png">
-</head>
-<body>
-     <!-- MOBILE MENU BUTTON -->
-  <button class="mobile-menu-btn" id="menuBtn">
-    ☰
-  </button>
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Profile — Examify</title>
 
-  <!-- OVERLAY -->
-  <div class="sidebar-overlay" id="overlay"></div>
-<div class="app-shell">
-  <aside class="sidebar" id="sidebar"></aside>
-  <main class="main-content">
-    <div class="page-header"><div class="page-title">My Profile</div></div>
-    <div id="content"><div class="loading-center"><div class="spinner"></div></div></div>
-  </main>
-</div>
-<script src="./js/app.js"></script>
-<script>
-const STATES = ['Abia','Adamawa','Akwa Ibom','Anambra','Bauchi','Bayelsa','Benue','Borno','Cross River','Delta','Ebonyi','Edo','Ekiti','Enugu','FCT','Gombe','Imo','Jigawa','Kaduna','Kano','Katsina','Kebbi','Kogi','Kwara','Lagos','Nasarawa','Niger','Ogun','Ondo','Osun','Oyo','Plateau','Rivers','Sokoto','Taraba','Yobe','Zamfara'];
+    <link rel="icon" type="image/png" href="./favicon.png" />
 
-let currentUser;
+    <link rel="stylesheet" href="./css/style.css" />
+    <link rel="stylesheet" href="./css/dashboard.css" />
+  </head>
 
-async function saveProfile(e) {
-  e.preventDefault();
+  <body>
+    <button class="mobile-menu-btn" id="menuBtn">☰</button>
 
-  const courses = [...document.querySelectorAll('input[name="course"]:checked')]
-    .map(c => c.value);
+    <div class="sidebar-overlay" id="overlay"></div>
 
-  try {
-   
-    await api('/api/profile', {
-      method: 'PUT',
-      body: {
-        name: document.getElementById('name').value,
-        school: document.getElementById('school').value,
-        state: document.getElementById('state').value,
-        target_cgpa: parseInt(document.getElementById('target').value) || null,
-        courses,
+    <div class="app-shell">
+      <aside class="sidebar" id="sidebar"></aside>
+
+      <main class="main-content">
+        <div class="page-header">
+          <div>
+            <div class="page-title">My Profile</div>
+            <div class="page-subtitle">
+              Manage your account and learning preferences
+            </div>
+          </div>
+        </div>
+
+        <div id="content">
+          <div class="loading-center">
+            <div class="spinner"></div>
+            <p>Loading profile...</p>
+          </div>
+        </div>
+      </main>
+    </div>
+
+    <script src="./js/app.js"></script>
+
+    <script>
+      const STATES = [
+        "Abia",
+        "Adamawa",
+        "Akwa Ibom",
+        "Anambra",
+        "Bauchi",
+        "Bayelsa",
+        "Benue",
+        "Borno",
+        "Cross River",
+        "Delta",
+        "Ebonyi",
+        "Edo",
+        "Ekiti",
+        "Enugu",
+        "FCT",
+        "Gombe",
+        "Imo",
+        "Jigawa",
+        "Kaduna",
+        "Kano",
+        "Katsina",
+        "Kebbi",
+        "Kogi",
+        "Kwara",
+        "Lagos",
+        "Nasarawa",
+        "Niger",
+        "Ogun",
+        "Ondo",
+        "Osun",
+        "Oyo",
+        "Plateau",
+        "Rivers",
+        "Sokoto",
+        "Taraba",
+        "Yobe",
+        "Zamfara",
+      ];
+
+      const savedTheme = localStorage.getItem("theme");
+
+      if (savedTheme === "dark") {
+        document.body.classList.add("dark");
       }
-    });
 
-    toast('Profile saved!', 'success');
-  } catch (e) {
-    toast(e.message, 'error');
-  }
-}
+      let currentUser = null;
 
-(async () => {
-  currentUser = await requireAuth();
-  if (!currentUser) return;
+      async function saveProfile(e) {
+        e.preventDefault();
 
-  document.getElementById('sidebar').innerHTML =
-    renderSidebar('/profile.html', currentUser.role === 'admin');
+        const courses = [
+          ...document.querySelectorAll('input[name="course"]:checked'),
+        ].map((c) => c.value);
 
-  try {
-   
-    const subjects = await api('/api/subjects');
+        const body = {
+          name: document.getElementById("name").value,
+          school: document.getElementById("school").value,
+          state: document.getElementById("state").value,
+          target_cgpa:
+            parseFloat(document.getElementById("target").value) || null,
+          courses,
+        };
 
-    document.getElementById('content').innerHTML = `
+        const btn = document.getElementById("saveBtn");
+
+        btn.disabled = true;
+        btn.textContent = "Saving...";
+
+        try {
+          const res = await api("/api/profile", {
+            method: "PUT",
+            body,
+          });
+
+          if (!res) {
+            btn.disabled = false;
+            btn.textContent = "Save Changes";
+            return;
+          }
+
+          toast("Profile updated successfully!", "success");
+        } catch (err) {
+          toast(err.message, "error");
+        } finally {
+          btn.disabled = false;
+          btn.textContent = "Save Changes";
+        }
+      }
+
+      (async () => {
+        currentUser = await requireAuth();
+
+        if (!currentUser) return;
+
+        document.getElementById("sidebar").innerHTML = renderSidebar(
+          "/profile.html",
+          currentUser.role === "admin",
+        );
+
+        try {
+          const subjects = await api("/api/subjects");
+
+          document.getElementById("content").innerHTML = `
+
       <div class="grid-2" style="gap:24px">
 
         <div>
+
           <div class="card" style="margin-bottom:20px">
+
             <div style="display:flex;align-items:center;gap:16px">
-              <div style="width:64px;height:64px;border-radius:50%;background:var(--primary);
-                display:flex;align-items:center;justify-content:center;font-size:26px;font-weight:800">
-                ${currentUser.name?.[0]?.toUpperCase() || '?'}
+
+              <div style="
+                width:70px;
+                height:70px;
+                border-radius:50%;
+                background:var(--primary);
+                display:flex;
+                align-items:center;
+                justify-content:center;
+                font-size:28px;
+                font-weight:800;
+              ">
+                ${currentUser.name?.[0]?.toUpperCase() || "?"}
               </div>
 
               <div>
-                <div style="font-size:20px;font-weight:700">${currentUser.name}</div>
-                <div style="color:var(--muted);font-size:14px">${currentUser.email}</div>
-                <span class="badge ${currentUser.role === 'admin' ? 'badge-purple' : 'badge-blue'}"
-                  style="margin-top:6px">${currentUser.role}</span>
+
+                <div style="font-size:22px;font-weight:700">
+                  ${currentUser.name}
+                </div>
+
+                <div style="color:var(--muted);font-size:14px">
+                  ${currentUser.email}
+                </div>
+
+                <div style="margin-top:10px">
+
+                  <span class="badge ${
+                    currentUser.role === "admin" ? "badge-purple" : "badge-blue"
+                  }">
+                    ${currentUser.role}
+                  </span>
+
+                </div>
+
               </div>
+
             </div>
+
           </div>
 
           <div class="card">
-            <div style="font-weight:700;font-size:16px;margin-bottom:20px">Edit Profile</div>
+
+            <div style="
+              font-size:18px;
+              font-weight:700;
+              margin-bottom:20px;
+            ">
+              Edit Profile
+            </div>
 
             <form onsubmit="saveProfile(event)">
+
               <div class="form-group">
                 <label>Full Name</label>
-                <input id="name" value="${currentUser.name || ''}" required />
+
+                <input
+                  id="name"
+                  required
+                  value="${currentUser.name || ""}"
+                />
               </div>
 
               <div class="form-group">
                 <label>School</label>
-                <input id="school" value="${currentUser.school || ''}" />
+
+                <input
+                  id="school"
+                  value="${currentUser.school || ""}"
+                  placeholder="Enter your school"
+                />
               </div>
 
               <div class="form-group">
                 <label>State</label>
+
                 <select id="state">
-                  <option value="">Select state</option>
-                  ${STATES.map(s => `
-                    <option value="${s}" ${currentUser.state === s ? 'selected' : ''}>${s}</option>
-                  `).join('')}
+
+                  <option value="">
+                    Select State
+                  </option>
+
+                  ${STATES.map(
+                    (s) => `
+                    <option
+                      value="${s}"
+                      ${currentUser.state === s ? "selected" : ""}
+                    >
+                      ${s}
+                    </option>
+                  `,
+                  ).join("")}
+
                 </select>
               </div>
 
               <div class="form-group">
                 <label>Target CGPA</label>
-                <input id="target" type="number" min="0" max="5" step="0.01"
-                  value="${currentUser.target_cgpa || ''}" />
+
+                <input
+                  id="target"
+                  type="number"
+                  min="0"
+                  max="5"
+                  step="0.01"
+                  value="${currentUser.target_cgpa || ""}"
+                  placeholder="e.g 4.50"
+                />
               </div>
 
-              <button type="submit" class="btn btn-primary" style="width:100%">
+              <button
+                type="submit"
+                class="btn btn-primary"
+                id="saveBtn"
+                style="width:100%"
+              >
                 Save Changes
               </button>
+
             </form>
+
           </div>
+
         </div>
 
-        <div class="card">
-          <div style="font-weight:700;font-size:16px;margin-bottom:4px">My Courses</div>
-          <div style="color:var(--muted);font-size:13px;margin-bottom:20px">
-            Select courses you're preparing for
+        <div>
+
+          <div class="card">
+
+            <div style="
+              font-size:18px;
+              font-weight:700;
+              margin-bottom:6px;
+            ">
+              My Subjects
+            </div>
+
+            <div style="
+              color:var(--muted);
+              font-size:13px;
+              margin-bottom:20px;
+            ">
+              Choose the subjects you are preparing for
+            </div>
+
+            ${
+              subjects && subjects.length
+                ? `
+                <div style="
+                  display:flex;
+                  flex-direction:column;
+                  gap:10px;
+                ">
+
+                  ${subjects
+                    .map(
+                      (s) => `
+
+                    <label style="
+                      display:flex;
+                      align-items:center;
+                      gap:12px;
+                      padding:12px 14px;
+                      border-radius:10px;
+                      background:var(--bg2);
+                      border:1px solid var(--border);
+                      cursor:pointer;
+                      transition:0.2s;
+                    ">
+
+                      <input
+                        type="checkbox"
+                        name="course"
+                        value="${s.code}"
+                        ${
+                          (currentUser.courses || []).includes(s.code)
+                            ? "checked"
+                            : ""
+                        }
+                        style="
+                          width:16px;
+                          height:16px;
+                          accent-color:var(--primary);
+                        "
+                      />
+
+                      <div>
+
+                        <div style="
+                          font-size:14px;
+                          font-weight:600;
+                        ">
+                          ${s.name}
+                        </div>
+
+                        <div style="
+                          font-size:12px;
+                          color:var(--muted);
+                        ">
+                          ${s.code}
+                        </div>
+
+                      </div>
+
+                    </label>
+
+                  `,
+                    )
+                    .join("")}
+
+                </div>
+              `
+                : `
+                <div style="
+                  text-align:center;
+                  color:var(--muted);
+                  padding:30px 0;
+                ">
+                  No subjects available
+                </div>
+              `
+            }
+
+            <button
+              class="btn btn-primary"
+              style="width:100%;margin-top:22px"
+              onclick="
+                document.querySelector('form')
+                .dispatchEvent(
+                  new Event('submit', { bubbles:true, cancelable:true })
+                )
+              "
+            >
+              Save Subjects
+            </button>
+
           </div>
 
-          <div style="display:flex;flex-direction:column;gap:8px">
-            ${subjects.map(s => `
-              <label style="display:flex;align-items:center;gap:10px;
-                background:var(--bg2);border:1px solid var(--border);
-                border-radius:8px;padding:10px 14px;cursor:pointer">
-
-                <input type="checkbox" name="course" value="${s.code}"
-                  ${(currentUser.courses || []).includes(s.code) ? 'checked' : ''}
-                  style="width:16px;height:16px;accent-color:var(--primary)" />
-
-                <span style="font-size:13px;font-weight:500">${s.name}</span>
-              </label>
-            `).join('')}
-          </div>
-
-          <button class="btn btn-primary" style="width:100%;margin-top:20px"
-            onclick="document.querySelector('form').dispatchEvent(new Event('submit',{bubbles:true}))">
-            Save Courses
-          </button>
         </div>
 
       </div>
     `;
-  } catch (e) {
-    document.getElementById('content').innerHTML =
-      `<p style="color:var(--danger)">Failed to load profile: ${e.message}</p>`;
-  }
-})();
-      /* =========================
-       MOBILE SIDEBAR
-    ========================= */
+        } catch (err) {
+          document.getElementById("content").innerHTML = `
+      <div class="card">
+        <p style="color:var(--danger)">
+          Failed to load profile: ${err.message}
+        </p>
+      </div>
+    `;
+        }
+      })();
 
-    const sidebar = document.getElementById("sidebar");
-    const menuBtn = document.getElementById("menuBtn");
-    const overlay = document.getElementById("overlay");
+      const sidebar = document.getElementById("sidebar");
+      const menuBtn = document.getElementById("menuBtn");
+      const overlay = document.getElementById("overlay");
 
-    menuBtn.addEventListener("click", () => {
-      sidebar.classList.toggle("active");
-      overlay.classList.toggle("active");
-    });
+      menuBtn.addEventListener("click", () => {
+        sidebar.classList.toggle("active");
+        overlay.classList.toggle("active");
+      });
 
-    overlay.addEventListener("click", () => {
-      sidebar.classList.remove("active");
-      overlay.classList.remove("active");
-    });
-</script>
-</body>
+      overlay.addEventListener("click", () => {
+        sidebar.classList.remove("active");
+        overlay.classList.remove("active");
+      });
+    </script>
+  </body>
 </html>
