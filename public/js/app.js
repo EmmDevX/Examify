@@ -1,8 +1,8 @@
-const API_BASE = "/api";
+const API_BASE_URL = "https://examify25.vercel.app";
 
 async function api(path, opts = {}) {
   try {
-    const res = await fetch(`${API_BASE}${path}`, {
+    const res = await fetch(`${API_BASE_URL}${path}`, {
       method: opts.method || "GET",
       credentials: "include",
       headers: {
@@ -35,10 +35,11 @@ async function api(path, opts = {}) {
 
 async function requireAuth() {
   try {
-    const res = await fetch("https://examify25.vercel.app/api/auth/me", {
+    const res = await fetch(`${API_BASE_URL}/api/auth/me`, {
       credentials: "include",
     });
 
+    if (res.status === 401) return null;
     if (!res.ok) return null;
 
     return await res.json();
@@ -62,7 +63,7 @@ async function requireAdminUser() {
 
 async function signOut() {
   try {
-    await fetch(`${API_BASE}/auth/logout`, {
+    await fetch(`${API_BASE_URL}/api/auth/logout`, {
       method: "POST",
       credentials: "include",
     });
