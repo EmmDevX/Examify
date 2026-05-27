@@ -10,14 +10,18 @@
     <link rel="icon" type="image/png" href="./favicon.png" />
 
     <style>
+      * {
+        box-sizing: border-box;
+      }
+
       body {
         min-height: 100vh;
         display: flex;
         align-items: center;
         justify-content: center;
-        padding: 20px;
-        overflow: hidden;
+        padding: 40px 20px;
         position: relative;
+        overflow-x: hidden;
       }
 
       .auth-bg {
@@ -55,10 +59,14 @@
 
       .auth-wrapper {
         width: 100%;
-        max-width: 480px;
+        max-width: 520px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
       }
 
       .auth-card {
+        width: 100%;
         background: rgba(16, 16, 58, 0.88);
         backdrop-filter: blur(20px);
         border: 1px solid rgba(255, 255, 255, 0.08);
@@ -75,6 +83,7 @@
           opacity: 0;
           transform: translateY(18px);
         }
+
         to {
           opacity: 1;
           transform: translateY(0);
@@ -90,8 +99,8 @@
       }
 
       .logo-icon {
-        width: 52px;
-        height: 52px;
+        width: 54px;
+        height: 54px;
         border-radius: 16px;
         background: linear-gradient(135deg, var(--primary), var(--accent));
         display: flex;
@@ -99,18 +108,19 @@
         justify-content: center;
         font-size: 20px;
         font-weight: 800;
-        color: white;
+        color: #fff;
         box-shadow: 0 10px 25px rgba(91, 61, 232, 0.45);
+        flex-shrink: 0;
       }
 
       .brand-name {
-        font-size: 24px;
+        font-size: 25px;
         font-weight: 800;
         letter-spacing: -0.5px;
       }
 
       .auth-title {
-        font-size: 30px;
+        font-size: 32px;
         font-weight: 800;
         text-align: center;
         margin-bottom: 10px;
@@ -165,7 +175,7 @@
 
       .form-group input {
         width: 100%;
-        height: 54px;
+        height: 56px;
         border-radius: 14px;
         border: 1px solid var(--border);
         background: rgba(255, 255, 255, 0.04);
@@ -176,6 +186,7 @@
       }
 
       .form-group input:focus {
+        outline: none;
         border-color: var(--primary);
         box-shadow: 0 0 0 4px rgba(91, 61, 232, 0.15);
         background: rgba(255, 255, 255, 0.06);
@@ -194,7 +205,7 @@
       }
 
       .password-strength {
-        margin-top: 8px;
+        margin-top: 10px;
       }
 
       .strength-bar {
@@ -223,15 +234,18 @@
         align-items: flex-start;
         gap: 10px;
         margin-top: 10px;
-        margin-bottom: 22px;
+        margin-bottom: 24px;
         font-size: 13px;
         color: var(--muted);
         line-height: 1.5;
       }
 
       .terms input {
-        margin-top: 3px;
+        width: 16px;
+        height: 16px;
+        margin-top: 2px;
         accent-color: var(--primary);
+        flex-shrink: 0;
       }
 
       .terms a {
@@ -242,7 +256,7 @@
 
       .auth-btn {
         width: 100%;
-        height: 54px;
+        height: 56px;
         border-radius: 14px;
         border: none;
         background: linear-gradient(
@@ -268,53 +282,9 @@
         transform: none;
       }
 
-      .divider {
-        text-align: center;
-        color: var(--muted);
-        font-size: 13px;
-        margin: 26px 0;
-        position: relative;
-      }
-
-      .divider::before,
-      .divider::after {
-        content: "";
-        position: absolute;
-        top: 50%;
-        width: 40%;
-        height: 1px;
-        background: rgba(255, 255, 255, 0.08);
-      }
-
-      .divider::before {
-        left: 0;
-      }
-
-      .divider::after {
-        right: 0;
-      }
-
-      .google-btn {
-        width: 100%;
-        height: 52px;
-        border-radius: 14px;
-        border: 1px solid var(--border);
-        background: rgba(255, 255, 255, 0.04);
-        color: var(--text);
-        font-size: 14px;
-        font-weight: 600;
-        cursor: pointer;
-        transition: 0.2s ease;
-      }
-
-      .google-btn:hover {
-        background: rgba(255, 255, 255, 0.06);
-        border-color: var(--primary);
-      }
-
       .auth-footer {
         text-align: center;
-        margin-top: 24px;
+        margin-top: 28px;
         color: var(--muted);
         font-size: 14px;
       }
@@ -325,34 +295,63 @@
         text-decoration: none;
       }
 
-      .theme-toggle {
-        position: fixed;
-        top: 20px;
-        right: 20px;
-        width: 48px;
-        height: 48px;
-        border-radius: 50%;
-        border: 1px solid var(--border);
-        background: rgba(16, 16, 58, 0.75);
-        backdrop-filter: blur(14px);
-        color: white;
-        cursor: pointer;
-        z-index: 20;
-        font-size: 18px;
+      @media (max-width: 768px) {
+        body {
+          padding: 24px 16px;
+        }
+
+        .auth-wrapper {
+          max-width: 100%;
+        }
+
+        .auth-card {
+          padding: 32px 24px;
+          border-radius: 24px;
+        }
+
+        .auth-title {
+          font-size: 28px;
+        }
+
+        .brand-name {
+          font-size: 22px;
+        }
       }
 
-      @media (max-width: 520px) {
+      @media (max-width: 480px) {
+        body {
+          padding: 16px;
+        }
+
         .auth-card {
-          padding: 30px 22px;
+          padding: 26px 18px;
           border-radius: 22px;
         }
 
         .auth-title {
-          font-size: 26px;
+          font-size: 24px;
+        }
+
+        .auth-subtitle {
+          font-size: 13px;
+        }
+
+        .form-group input {
+          height: 52px;
+        }
+
+        .auth-btn {
+          height: 52px;
         }
 
         .brand-name {
           font-size: 20px;
+        }
+
+        .logo-icon {
+          width: 48px;
+          height: 48px;
+          font-size: 18px;
         }
       }
     </style>
@@ -371,7 +370,12 @@
 
         <div class="auth-title">Create Account 🚀</div>
 
+        <div class="auth-subtitle">
+          Join thousands of students preparing smarter with Examify
+        </div>
+
         <div class="error-box" id="error-msg"></div>
+
         <div class="success-box" id="success-msg"></div>
 
         <form id="register-form">
@@ -416,7 +420,11 @@
                 minlength="6"
               />
 
-              <button type="button" class="password-toggle" id="togglePassword">
+              <button
+                type="button"
+                class="password-toggle"
+                id="togglePassword"
+              >
                 👁
               </button>
             </div>
@@ -462,13 +470,9 @@
           </button>
         </form>
 
-        <div class="divider">OR</div>
-
-        <button class="google-btn">Continue with Google</button>
-
         <div class="auth-footer">
           Already have an account?
-          <a href="./sign-in.html"> Log In </a>
+          <a href="./sign-in.html">Log In</a>
         </div>
       </div>
     </div>
@@ -476,25 +480,6 @@
     <script src="./js/app.js"></script>
 
     <script>
-      const savedTheme = localStorage.getItem("theme");
-
-      if (savedTheme === "dark") {
-        document.body.classList.add("dark");
-        document.getElementById("themeToggle").textContent = "☀️";
-      }
-
-      document.getElementById("themeToggle").addEventListener("click", () => {
-        document.body.classList.toggle("dark");
-
-        const isDark = document.body.classList.contains("dark");
-
-        localStorage.setItem("theme", isDark ? "dark" : "light");
-
-        document.getElementById("themeToggle").textContent = isDark
-          ? "☀️"
-          : "🌙";
-      });
-
       fetch("/api/auth/me", {
         credentials: "include",
       }).then((r) => {
@@ -504,6 +489,7 @@
       });
 
       const passwordInput = document.getElementById("password");
+
       const togglePassword = document.getElementById("togglePassword");
 
       togglePassword.addEventListener("click", () => {
@@ -521,13 +507,17 @@
         const value = passwordInput.value;
 
         const fill = document.getElementById("strengthFill");
+
         const text = document.getElementById("strengthText");
 
         let strength = 0;
 
         if (value.length >= 6) strength++;
+
         if (/[A-Z]/.test(value)) strength++;
+
         if (/[0-9]/.test(value)) strength++;
+
         if (/[^A-Za-z0-9]/.test(value)) strength++;
 
         const levels = [
@@ -539,16 +529,22 @@
 
         if (value.length === 0) {
           fill.style.width = "0%";
+
           text.textContent = "Password strength";
+
+          text.style.color = "var(--muted)";
+
           return;
         }
 
         const level = levels[Math.max(0, strength - 1)];
 
         fill.style.width = level.width;
+
         fill.style.background = level.color;
 
         text.textContent = level.text;
+
         text.style.color = level.color;
       });
 
@@ -558,19 +554,26 @@
           e.preventDefault();
 
           const btn = document.getElementById("submit-btn");
+
           const errBox = document.getElementById("error-msg");
+
           const successBox = document.getElementById("success-msg");
 
           errBox.style.display = "none";
+
           successBox.style.display = "none";
 
           const name = document.getElementById("name").value.trim();
+
           const email = document.getElementById("email").value.trim();
+
           const password = document.getElementById("password").value;
+
           const confirm = document.getElementById("confirm").value;
 
           if (password !== confirm) {
             errBox.textContent = "Passwords do not match.";
+
             errBox.style.display = "block";
 
             return;
@@ -579,19 +582,22 @@
           btn.disabled = true;
 
           btn.innerHTML = `
-        <span style="display:flex;align-items:center;justify-content:center;gap:10px">
-          <span class="spinner" style="width:18px;height:18px"></span>
-          Creating account...
-        </span>
-      `;
+            <span style="display:flex;align-items:center;justify-content:center;gap:10px">
+              <span class="spinner" style="width:18px;height:18px"></span>
+              Creating account...
+            </span>
+          `;
 
           try {
             const res = await fetch("/api/auth/register", {
               method: "POST",
+
               credentials: "include",
+
               headers: {
                 "Content-Type": "application/json",
               },
+
               body: JSON.stringify({
                 name,
                 email,
@@ -607,6 +613,7 @@
               errBox.style.display = "block";
 
               btn.disabled = false;
+
               btn.textContent = "Create Account";
 
               return;
@@ -628,6 +635,7 @@
             errBox.style.display = "block";
 
             btn.disabled = false;
+
             btn.textContent = "Create Account";
           }
         });
