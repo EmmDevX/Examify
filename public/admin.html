@@ -681,66 +681,45 @@
   openModal("add-q-modal");
 }
 
-      async function saveQuestion(e) {
-        e.preventDefault();
+       async function saveQuestion(e) {
+  e.preventDefault();
 
-         const quizId = currentQuizId;
+  const quizId = currentQuizId;
 
-if (!quizId) {
-  toast("Quiz not selected", "error");
-  return;
+  if (!quizId) {
+    toast("Quiz not selected", "error");
+    return;
+  }
+
+  const body = {
+    quiz_id: parseInt(quizId),
+    text: document.getElementById("aq-text").value,
+    option_a: document.getElementById("aq-a").value,
+    option_b: document.getElementById("aq-b").value,
+    option_c: document.getElementById("aq-c").value,
+    option_d: document.getElementById("aq-d").value,
+    correct_option: document.getElementById("aq-correct").value,
+    explanation: document.getElementById("aq-exp").value,
+  };
+
+  try {
+    const res = await api("/api/admin?type=addQuestion", {
+      method: "POST",
+      body,
+    });
+
+    console.log("Question saved:", res);
+
+    closeModal("add-q-modal");
+    toast("Question added", "success");
+
+    refreshQs(quizId);
+    loadQuizzes();
+  } catch (err) {
+    console.error(err);
+    toast(err.message, "error");
+  }
 }
-
-        const body = {
-          text: document.getElementById("aq-text").value,
-          option_a: document.getElementById("aq-a").value,
-          option_b: document.getElementById("aq-b").value,
-          option_c: document.getElementById("aq-c").value,
-          option_d: document.getElementById("aq-d").value,
-          correct_option: document.getElementById("aq-correct").value,
-          explanation: document.getElementById("aq-exp").value,
-        };
-
-        try {
-          const res = await api(
-            `/api/admin?type=addQuestion&quiz_id=${quizId}`,
-            {
-              method: "POST",
-              body,
-            },
-          );
-
-          console.log("Question saved:", res);
-
-          closeModal("add-q-modal");
-          toast("Question added", "success");
-
-          refreshQs(quizId);
-          loadQuizzes();
-        } catch (err) {
-          console.error(err);
-          toast(err.message, "error");
-        }
-      }
-
-      async function deleteQ(id, quizId) {
-        if (!confirm("Delete question?")) return;
-
-        try {
-          await api(`/api/admin?type=deleteQuestion&id=${id}`, {
-            method: "DELETE",
-          });
-
-          toast("Question deleted", "success");
-
-          refreshQs(quizId);
-
-          loadQuizzes();
-        } catch (err) {
-          toast(err.message, "error");
-        }
-      }
-
       (async () => {
         const user = await requireAdminUser();
 
