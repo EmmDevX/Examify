@@ -607,16 +607,14 @@
 
         document.getElementById("q-modal-body").innerHTML = `
 
-    <div style="margin-bottom:14px;text-align:right">
-
-      <button
-        class="btn btn-primary btn-sm"
-        onclick="openAddQ(${quizId})"
-      >
-        + Add Question
-      </button>
-
-    </div>
+      <div style="margin-bottom:14px;text-align:right">
+  <button
+    class="btn btn-primary btn-sm"
+    onclick="openAddQ(${quizId})"
+  >
+    + Add Question
+  </button>
+</div>
 
     ${
       qs.length
@@ -675,13 +673,13 @@
   `;
       }
 
-      function openAddQ(quizId) {
-        document.getElementById("add-q-form").reset();
+     function openAddQ(quizId) {
+  console.log("OPEN ADD Q QUIZ ID:", quizId);
 
-        document.getElementById("aq-quiz-id").value = quizId;
+  document.getElementById("aq-quiz-id").value = quizId;
 
-        openModal("add-q-modal");
-      }
+  openModal("add-q-modal");
+}
 
       async function saveQuestion(e) {
   e.preventDefault();
