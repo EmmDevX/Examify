@@ -143,21 +143,18 @@ export default async function handler(req, res) {
       return res.json(result.rows);
     }
 
-    if (type === "addQuestion") {
-      console.log("ADD QUESTION REQUEST");
-      console.log("quiz_id:", req.query.quiz_id);
-      console.log("body:", req.body);
+     if (type === "addQuestion") {
+  const quiz_id = req.query.quiz_id;
 
-      const {
-        quiz_id,
-        text,
-        option_a,
-        option_b,
-        option_c,
-        option_d,
-        correct_option,
-        explanation,
-      } = req.body;
+  const {
+    text,
+    option_a,
+    option_b,
+    option_c,
+    option_d,
+    correct_option,
+    explanation,
+  } = req.body;
 
       const result = await pool.query(
         `INSERT INTO questions 
