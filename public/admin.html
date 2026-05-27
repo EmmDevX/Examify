@@ -532,51 +532,47 @@
         openModal("quiz-modal");
       }
 
-      async function saveQuiz(e) {
-        e.preventDefault();
+    async function saveQuiz(e) {
+  e.preventDefault();
 
-        const id = document.getElementById("edit-quiz-id").value;
+  const id = document.getElementById("edit-quiz-id").value;
 
-        const body = {
-          title: document.getElementById("q-title").value,
+  const subjectValue = document.getElementById("q-subject").value;
+  const scheduledValue = document.getElementById("q-scheduled").value;
 
-          description: document.getElementById("q-desc").value,
+  const body = {
+    title: document.getElementById("q-title").value,
+    description: document.getElementById("q-desc").value,
+    subject_id: subjectValue ? Number(subjectValue) : null,
+    duration_minutes: Number(document.getElementById("q-duration").value),
+    status: document.getElementById("q-status").value,
+    scheduled_at: scheduledValue ? new Date(scheduledValue).toISOString() : null,
+  };
 
-          subject_id: document.getElementById("q-subject").value || null,
+  try {
+    if (id) {
+      await api(`/api/admin?type=updateQuiz&id=${id}`, {
+        method: "PUT",
+        body,
+      });
+    } else {
+      await api("/api/admin?type=createQuiz", {
+        method: "POST",
+        body,
+      });
+    }
 
-          duration_minutes: parseInt(
-            document.getElementById("q-duration").value,
-          ),
+    closeModal("quiz-modal");
 
-          status: document.getElementById("q-status").value,
+    toast("Quiz saved", "success");
 
-          scheduled_at: document.getElementById("q-scheduled").value || null,
-        };
-
-        try {
-          if (id) {
-            await api(`/api/admin?type=updateQuiz&id=${id}`, {
-              method: "PUT",
-              body,
-            });
-          } else {
-            await api("/api/admin?type=createQuiz", {
-              method: "POST",
-              body,
-            });
-          }
-
-          closeModal("quiz-modal");
-
-          toast("Quiz saved", "success");
-
-          loadQuizzes();
-
-          loadStats();
-        } catch (err) {
-          toast(err.message, "error");
-        }
-      }
+    loadQuizzes();
+    loadStats();
+  } catch (err) {
+    console.error(err);
+    toast(err.message, "error");
+  }
+}
 
       async function deleteQuiz(id) {
         if (!confirm("Delete this quiz?")) return;
