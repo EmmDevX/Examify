@@ -2,6 +2,7 @@ import cookie from "cookie";
 import { pool } from "../db.js";
 
 export default async function handler(req, res) {
+  console.log("ENV CHECK:", process.env.DATABASE_URL);
   try {
     const cookies = cookie.parse(req.headers.cookie || "");
     const userId = cookies.userId;

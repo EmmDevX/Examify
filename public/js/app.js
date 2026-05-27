@@ -1,6 +1,8 @@
+const API_BASE = "/api";
+
 async function api(path, opts = {}) {
   try {
-    const res = await fetch(path, {
+    const res = await fetch(`${API_BASE}${path}`, {
       method: opts.method || "GET",
       credentials: "include",
       headers: {
@@ -33,11 +35,9 @@ async function api(path, opts = {}) {
 
 async function requireAuth() {
   try {
-    const res = await fetch("./api/auth/me", {
+    const res = await fetch(`${API_BASE}/auth/me`, {
       credentials: "include",
     });
-
-    if (res.status === 401) return null;
 
     if (!res.ok) return null;
 
@@ -62,12 +62,12 @@ async function requireAdminUser() {
 
 async function signOut() {
   try {
-    await fetch("./api/auth/logout", {
+    await fetch(`${API_BASE}/auth/logout`, {
       method: "POST",
       credentials: "include",
     });
 
-    window.location.href = "./sign-in.html";
+    window.location.href = "/sign-in.html";
   } catch (error) {
     console.error("Logout Error:", error);
     toast("Failed to sign out", "error");
@@ -76,15 +76,15 @@ async function signOut() {
 
 function renderSidebar(activePage = "", isAdmin = false) {
   const pages = [
-    { href: "./dashboard.html", label: "Dashboard", icon: "◫" },
-    { href: "./quizzes.html", label: "Quizzes", icon: "📖" },
-    { href: "./leaderboard.html", label: "Leaderboard", icon: "🏆" },
-    { href: "./profile.html", label: "Profile", icon: "👤" },
+    { href: "/dashboard.html", label: "Dashboard", icon: "◫" },
+    { href: "/quizzes.html", label: "Quizzes", icon: "📖" },
+    { href: "/leaderboard.html", label: "Leaderboard", icon: "🏆" },
+    { href: "/profile.html", label: "Profile", icon: "👤" },
   ];
 
   if (isAdmin) {
     pages.push({
-      href: "./public/admin.html",
+      href: "/admin.html",
       label: "Admin Panel",
       icon: "⚙️",
     });
