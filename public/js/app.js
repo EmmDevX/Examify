@@ -33,7 +33,7 @@ async function api(path, opts = {}) {
 
 async function requireAuth() {
   try {
-    const res = await fetch("/api/auth/me", {
+    const res = await fetch("./api/auth/me", {
       credentials: "include",
     });
 
@@ -62,12 +62,12 @@ async function requireAdminUser() {
 
 async function signOut() {
   try {
-    await fetch("/api/auth/logout", {
+    await fetch("./api/auth/logout", {
       method: "POST",
       credentials: "include",
     });
 
-    window.location.href = "/sign-in.html";
+    window.location.href = "./sign-in.html";
   } catch (error) {
     console.error("Logout Error:", error);
     toast("Failed to sign out", "error");
@@ -76,15 +76,15 @@ async function signOut() {
 
 function renderSidebar(activePage = "", isAdmin = false) {
   const pages = [
-    { href: "/dashboard.html", label: "Dashboard", icon: "◫" },
-    { href: "/quizzes.html", label: "Quizzes", icon: "📖" },
-    { href: "/leaderboard.html", label: "Leaderboard", icon: "🏆" },
-    { href: "/profile.html", label: "Profile", icon: "👤" },
+    { href: "./dashboard.html", label: "Dashboard", icon: "◫" },
+    { href: "./quizzes.html", label: "Quizzes", icon: "📖" },
+    { href: "./leaderboard.html", label: "Leaderboard", icon: "🏆" },
+    { href: "./profile.html", label: "Profile", icon: "👤" },
   ];
 
   if (isAdmin) {
     pages.push({
-      href: "/public/admin.html",
+      href: "./public/admin.html",
       label: "Admin Panel",
       icon: "⚙️",
     });
