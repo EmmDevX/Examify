@@ -4,33 +4,33 @@ module.exports = async function handler(req, res) {
   try {
     const { action, id } = req.query;
 
-    // ─────────────────────────────
-    // CREATE ATTEMPT
-    // POST /api/attempts
-    // ─────────────────────────────
-    if (req.method === "POST" && !action) {
-      const { quiz_id } = req.body;
+ // ─────────────────────────────
+// CREATE ATTEMPT
+// POST /api/attempts
+// ─────────────────────────────
+if (req.method === "POST" && !action) {
+  const { quiz_id } = req.body;
 
-      const qr = await pool.query(
-        "SELECT total_questions FROM quizzes WHERE id=$1",
-        [quiz_id]
-      );
+  const qr = await pool.query(
+    "SELECT total_questions FROM quizzes WHERE id=$1",
+    [quiz_id]
+  );
 
-      if (!qr.rows.length) {
-        return res.status(404).json({ error: "Quiz not found" });
-      }
+  if (!qr.rows.length) {
+    return res.status(404).json({ error: "Quiz not found" });
+  }
 
-      // ✅ FIX: prevent multiple attempts
-      const existing = await pool.query(
-        "SELECT id FROM attempts WHERE user_id=$1 AND quiz_id=$2",
-        [1, quiz_id]
-      );
+  // ❌ Removed restriction: users can now attempt multiple times
 
-      if (existing.rows.length > 0) {
-        return res.status(400).json({
-          error: "You have already attempted this quiz"
-        });
-      }
+  const result = await pool.query(
+    `INSERT INTO attempts (user_id, quiz_id, total_questions)
+     VALUES ($1, $2, $3)
+     RETURNING *`,
+    [1, quiz_id, qr.rows[0].total_questions]
+  );
+
+  return res.json(result.rows[0]);
+}
 
       const result = await pool.query(
         `INSERT INTO attempts (user_id, quiz_id, total_questions)
