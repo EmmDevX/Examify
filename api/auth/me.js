@@ -10,16 +10,16 @@ export default async function handler(req, res) {
       return res.status(401).json({ error: "Not logged in" });
     }
 
-    const user = await pool.query(
-      "SELECT id, name, email, role FROM users WHERE id=$1",
+    const result = await pool.query(
+      "SELECT id, name, email, role FROM users WHERE id = $1",
       [userId]
     );
 
-    if (!user.rows.length) {
+    if (!result.rows.length) {
       return res.status(401).json({ error: "User not found" });
     }
 
-    return res.status(200).json(user.rows[0]);
+    return res.status(200).json(result.rows[0]);
 
   } catch (err) {
     console.error("ME ERROR:", err);

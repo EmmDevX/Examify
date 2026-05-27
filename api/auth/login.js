@@ -42,17 +42,13 @@ export default async function handler(req, res) {
       });
     }
 
-    const serializedCookie = cookie.serialize(
-      "userId",
-      String(user.id),
-      {
-        httpOnly: true,
-        secure: true,
-        sameSite: "none",
-        path: "/",
-        maxAge: 60 * 60 * 24 * 7,
-      }
-    );
+  const serializedCookie = cookie.serialize("userId", String(user.id), {
+  httpOnly: true,
+  secure: process.env.NODE_ENV === "production",
+  sameSite: "none",
+  path: "/",
+  maxAge: 60 * 60 * 24 * 7,
+});
 
     res.setHeader("Set-Cookie", serializedCookie);
 

@@ -35,7 +35,7 @@ async function api(path, opts = {}) {
 
 async function requireAuth() {
   try {
-    const res = await fetch(`${API_BASE}/auth/me`, {
+    const res = await fetch("https://examify25.vercel.app/api/auth/me", {
       credentials: "include",
     });
 
