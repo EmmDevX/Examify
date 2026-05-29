@@ -64,37 +64,28 @@
   Number(attempt.answers?.length) ||
   0;
 
-let score = Number(attempt.score) || 0;
-
 /*
-  FIX:
-  Detect if score is already a percentage OR raw count
+  IMPORTANT:
+  score in DB is already PERCENTAGE (0–100)
 */
-let correct = score;
+const pct = Number(attempt.score) || 0;
 
-// If score looks like percentage (0–100 and greater than total questions)
-if (score > totalQuestions && score <= 100) {
-  correct = Math.round((score / 100) * totalQuestions);
-}
+// convert percentage → correct answers count
+const correct = totalQuestions > 0
+  ? Math.round((pct / 100) * totalQuestions)
+  : 0;
 
-// WRONG calculation always based on corrected value
+// derive wrong answers safely
 const wrong = Math.max(0, totalQuestions - correct);
 
-// PERCENTAGE calculation (always accurate)
-const pct =
-  totalQuestions > 0
-    ? Math.round((correct / totalQuestions) * 100)
-    : 0;
+const passed = pct >= 50;
 
-          const passed = pct >= 50;
-
-          const col =
-            pct >= 60
-              ? "var(--success)"
-              : pct >= 40
-              ? "var(--warning)"
-              : "var(--danger)";
-
+const col =
+  pct >= 60
+    ? "var(--success)"
+    : pct >= 40
+    ? "var(--warning)"
+    : "var(--danger)";
           let dur = "0";
 
           if (attempt.completed_at && attempt.started_at) {
