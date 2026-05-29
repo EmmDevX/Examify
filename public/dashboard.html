@@ -6,7 +6,6 @@
     <title>Dashboard — Examify</title>
 
     <link rel="icon" type="image/png" href="./favicon.png" />
-
     <link rel="stylesheet" href="./css/style.css" />
     <link rel="stylesheet" href="./css/toogle.css" />
     <link rel="stylesheet" href="./css/dash.css" />
@@ -14,7 +13,6 @@
 
   <body>
     <button class="mobile-menu-btn" id="menuBtn">☰</button>
-
     <div class="sidebar-overlay" id="overlay"></div>
 
     <div class="app-shell">
@@ -56,7 +54,6 @@
       let currentUser = null;
 
       (async () => {
-
         currentUser = await requireAuth();
 
         if (!currentUser) return;
@@ -93,13 +90,10 @@
         `;
 
         requestAnimationFrame(loadDashboardData);
-
       })();
 
       async function loadDashboardData() {
-
         try {
-
           let stats = await api("/api/dashboard");
 
           if (!stats) return;
@@ -108,37 +102,25 @@
           stats.recent_attempts = stats.recent_attempts || [];
 
           renderDashboard(stats);
-
         } catch (err) {
-
           console.error(err);
 
           document.getElementById("content").innerHTML = `
             <div class="card" style="padding:40px;text-align:center">
-
-              <div style="
-                font-size:22px;
-                font-weight:700;
-                margin-bottom:10px;
-                color:var(--danger);
-              ">
+              <div style="font-size:22px;font-weight:700;margin-bottom:10px;color:var(--danger);">
                 Failed to load dashboard
               </div>
-
               <p style="color:var(--muted)">
                 ${err.message || "Something went wrong"}
               </p>
-
             </div>
           `;
         }
       }
 
       function renderDashboard(stats) {
-
         document.getElementById("content").innerHTML = `
           <div class="page-header">
-
             <div>
               <div class="page-title">
                 Welcome back, ${currentUser.name.split(" ")[0]} 👋
@@ -150,7 +132,6 @@
             </div>
 
             <div style="display:flex;gap:10px;align-items:center">
-
               <button id="themeToggle" class="btn btn-secondary">
                 ${
                   document.body.classList.contains("dark")
@@ -162,231 +143,97 @@
               <a href="./quizzes.html" class="btn btn-primary">
                 Take Quiz →
               </a>
-
             </div>
-
           </div>
 
           <div class="grid-4" style="margin-bottom:24px">
+            <div class="stat-card">
+              Total Attempts<br/>
+              <b>${stats.total_attempts}</b>
+            </div>
 
-            ${[
-              {
-                label: "Total Attempts",
-                value: Number(stats.total_attempts || 0),
-                color: "var(--primary)"
-              },
-              {
-                label: "Average Score",
-                value: Number(stats.avg_score || 0) + "%",
-                color: "var(--success)"
-              },
-              {
-                label: "Best Score",
-                value: Number(stats.best_score || 0) + "%",
-                color: "var(--warning)"
-              },
-              {
-                label: "Weekly Streak",
-                value: Number(stats.weekly_streak || 0),
-                color: "var(--accent)"
-              },
-            ]
-              .map(
-                (card) => `
-                  <div class="stat-card">
+            <div class="stat-card">
+              Average Score<br/>
+              <b>${Number(stats.avg_score || 0).toFixed(1)}%</b>
+            </div>
 
-                    <div style="
-                      font-size:12px;
-                      color:var(--muted);
-                      margin-bottom:10px;
-                      text-transform:uppercase;
-                    ">
-                      ${card.label}
-                    </div>
+            <div class="stat-card">
+              Best Score<br/>
+              <b>${Number(stats.best_score || 0).toFixed(1)}%</b>
+            </div>
 
-                    <div style="
-                      font-size:34px;
-                      font-weight:800;
-                      color:${card.color};
-                    ">
-                      ${card.value}
-                    </div>
-
-                  </div>
-                `
-              )
-              .join("")}
-
+            <div class="stat-card">
+              Weekly Streak<br/>
+              <b>${stats.weekly_streak}</b>
+            </div>
           </div>
 
           <div class="grid-2">
-
             <div class="card">
-
-              <div style="
-                font-size:17px;
-                font-weight:700;
-                margin-bottom:18px;
-              ">
+              <div style="font-size:17px;font-weight:700;margin-bottom:18px;">
                 Score by Subject
               </div>
 
               ${
                 stats.subject_scores.length
                   ? stats.subject_scores.map(subject => `
-                      <div style="margin-bottom:18px">
-
-                        <div style="
-                          display:flex;
-                          justify-content:space-between;
-                          font-size:13px;
-                          margin-bottom:7px;
-                        ">
-
-                          <span>
-                            ${subject.subject || "General"}
-                          </span>
-
-                          <span style="
-                            font-weight:700;
-                            color:var(--primary);
-                          ">
-                            ${Number(subject.score || 0)}%
-                          </span>
-
-                        </div>
-
-                        <div class="progress-bar">
-
-                          <div
-                            class="progress-fill"
-                            style="width:${Number(subject.score || 0)}%;">
-                          </div>
-
-                        </div>
-
+                    <div style="margin-bottom:18px">
+                      <div style="display:flex;justify-content:space-between">
+                        <span>${subject.subject || "General"}</span>
+                        <span>${Number(subject.score || 0)}%</span>
                       </div>
-                    `).join("")
-                  : `
-                    <div style="
-                      text-align:center;
-                      padding:40px;
-                      color:var(--muted);
-                    ">
-                      No subject performance yet
-                    </div>
-                  `
-              }
 
+                      <div class="progress-bar">
+                        <div class="progress-fill" style="width:${Number(subject.score || 0)}%"></div>
+                      </div>
+                    </div>
+                  `).join("")
+                  : `<p>No subject performance yet</p>`
+              }
             </div>
 
             <div class="card">
-
-              <div style="
-                font-size:17px;
-                font-weight:700;
-                margin-bottom:18px;
-              ">
+              <div style="font-size:17px;font-weight:700;margin-bottom:18px;">
                 Recent Attempts
               </div>
 
               ${
                 stats.recent_attempts.length
-                  ? stats.recent_attempts.map(a => {
-
-                      const percent =
-                        a.total_questions > 0
-                          ? Math.round(
-                              (Number(a.score || 0) /
-                                Number(a.total_questions || 1)) * 100
-                            )
-                          : 0;
-
-                      return `
-                        <div style="
-                          display:flex;
-                          justify-content:space-between;
-                          align-items:center;
-                          padding:12px 0;
-                        ">
-
-                          <div>
-
-                            <div style="
-                              font-size:14px;
-                              font-weight:600;
-                            ">
-                              ${a.title || "Quiz"}
-                            </div>
-
-                            <div style="
-                              font-size:12px;
-                              color:var(--muted);
-                            ">
-                              ${a.subject || "General"} •
-
-                              ${
-                                a.completed_at
-                                  ? new Date(a.completed_at).toLocaleDateString()
-                                  : "Recently"
-                              }
-                            </div>
-
-                          </div>
-
-                          <a
-                            href="./results.html?attempt=${a.id}"
-                            class="badge ${
-                              percent >= 70
-                                ? "badge-green"
-                                : percent >= 40
-                                  ? "badge-yellow"
-                                  : "badge-red"
-                            }"
-                          >
-                            ${percent}%
-                          </a>
-
+                  ? stats.recent_attempts.map(a => `
+                    <div style="display:flex;justify-content:space-between;padding:10px 0">
+                      <div>
+                        <div>${a.title}</div>
+                        <div style="font-size:12px;color:gray">
+                          ${a.subject} • ${
+                            a.completed_at
+                              ? new Date(a.completed_at).toLocaleDateString()
+                              : "Recently"
+                          }
                         </div>
-                      `;
-                    }).join("")
-                  : `
-                    <div style="
-                      text-align:center;
-                      padding:40px;
-                      color:var(--muted);
-                    ">
-                      No quiz attempts yet
+                      </div>
+
+                      <div><b>${Number(a.score || 0)}%</b></div>
                     </div>
-                  `
+                  `).join("")
+                  : `<p>No quiz attempts yet</p>`
               }
-
             </div>
-
           </div>
         `;
 
-        document
-          .getElementById("themeToggle")
-          .addEventListener("click", () => {
+        document.getElementById("themeToggle").addEventListener("click", () => {
+          document.body.classList.toggle("dark");
 
-            document.body.classList.toggle("dark");
+          localStorage.setItem(
+            "theme",
+            document.body.classList.contains("dark") ? "dark" : "light"
+          );
 
-            const dark =
-              document.body.classList.contains("dark");
-
-            localStorage.setItem(
-              "theme",
-              dark ? "dark" : "light"
-            );
-
-            document.getElementById(
-              "themeToggle"
-            ).textContent =
-              dark
-                ? "Light Mode ☀️"
-                : "Dark Mode 🌙";
-          });
+          document.getElementById("themeToggle").textContent =
+            document.body.classList.contains("dark")
+              ? "Light Mode ☀️"
+              : "Dark Mode 🌙";
+        });
       }
     </script>
   </body>

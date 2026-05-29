@@ -2,9 +2,7 @@ import jwt from "jsonwebtoken";
 import { pool } from "../lib/db.js";
 
 export default async function handler(req, res) {
-
   try {
-
     const token = req.cookies?.token;
 
     if (!token) {
@@ -13,11 +11,7 @@ export default async function handler(req, res) {
       });
     }
 
-    const decoded = jwt.verify(
-      token,
-      process.env.JWT_SECRET
-    );
-
+    const decoded = jwt.verify(token, process.env.JWT_SECRET);
     const userId = decoded.id;
 
     const totals = await pool.query(
@@ -31,7 +25,7 @@ export default async function handler(req, res) {
               CASE
                 WHEN total_questions > 0
                 THEN ((score::decimal / total_questions) * 100)
-                ELSE 0
+                ELSE NULL
               END
             )::numeric,
             1
@@ -45,7 +39,7 @@ export default async function handler(req, res) {
               CASE
                 WHEN total_questions > 0
                 THEN ((score::decimal / total_questions) * 100)
-                ELSE 0
+                ELSE NULL
               END
             )::numeric,
             1
@@ -54,7 +48,6 @@ export default async function handler(req, res) {
         ) AS best_score
 
       FROM attempts
-
       WHERE user_id = $1
       AND status = 'completed'
       `,
@@ -72,18 +65,13 @@ export default async function handler(req, res) {
         COALESCE(s.name, 'General') AS subject
 
       FROM attempts a
-
-      JOIN quizzes q
-      ON a.quiz_id = q.id
-
-      LEFT JOIN subjects s
-      ON q.subject_id = s.id
+      JOIN quizzes q ON a.quiz_id = q.id
+      LEFT JOIN subjects s ON q.subject_id = s.id
 
       WHERE a.user_id = $1
       AND a.status = 'completed'
 
       ORDER BY a.completed_at DESC
-
       LIMIT 5
       `,
       [userId]
@@ -99,25 +87,20 @@ export default async function handler(req, res) {
             CASE
               WHEN a.total_questions > 0
               THEN ((a.score::decimal / a.total_questions) * 100)
-              ELSE 0
+              ELSE NULL
             END
           )::numeric,
           1
         ) AS score
 
       FROM attempts a
-
-      JOIN quizzes q
-      ON a.quiz_id = q.id
-
-      LEFT JOIN subjects s
-      ON q.subject_id = s.id
+      JOIN quizzes q ON a.quiz_id = q.id
+      LEFT JOIN subjects s ON q.subject_id = s.id
 
       WHERE a.user_id = $1
       AND a.status = 'completed'
 
       GROUP BY s.name
-
       ORDER BY score DESC
       `,
       [userId]
@@ -127,9 +110,7 @@ export default async function handler(req, res) {
       `
       SELECT
         COUNT(DISTINCT DATE(completed_at)) AS streak
-
       FROM attempts
-
       WHERE user_id = $1
       AND completed_at IS NOT NULL
       AND completed_at >= NOW() - INTERVAL '7 days'
@@ -138,31 +119,16 @@ export default async function handler(req, res) {
     );
 
     return res.json({
-
-      total_attempts:
-        Number(totals.rows[0].total_attempts) || 0,
-
-      avg_score:
-        Number(totals.rows[0].avg_score) || 0,
-
-      best_score:
-        Number(totals.rows[0].best_score) || 0,
-
-      weekly_streak:
-        Number(streakQuery.rows[0].streak) || 0,
-
-      subject_scores:
-        subjectScores.rows || [],
-
-      recent_attempts:
-        recentAttempts.rows || []
-
+      total_attempts: Number(totals.rows[0].total_attempts) || 0,
+      avg_score: Number(totals.rows[0].avg_score) || 0,
+      best_score: Number(totals.rows[0].best_score) || 0,
+      weekly_streak: Number(streakQuery.rows[0].streak) || 0,
+      subject_scores: subjectScores.rows || [],
+      recent_attempts: recentAttempts.rows || []
     });
 
   } catch (err) {
-
     console.error(err);
-
     return res.status(500).json({
       error: err.message
     });

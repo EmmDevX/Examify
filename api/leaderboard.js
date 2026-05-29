@@ -13,30 +13,36 @@ export default async function handler(req, res) {
         COUNT(attempts.id) AS attempts,
 
         ROUND(
-          AVG(
-            CASE
-              WHEN attempts.total_questions > 0
-              THEN (attempts.score::decimal / attempts.total_questions) * 100
-              ELSE 0
-            END
+          COALESCE(
+            AVG(
+              CASE
+                WHEN attempts.total_questions > 0
+                THEN (attempts.score::decimal / attempts.total_questions) * 100
+                ELSE NULL
+              END
+            ),
+            0
           )
         ) AS avg_score,
 
         ROUND(
-          MAX(
-            CASE
-              WHEN attempts.total_questions > 0
-              THEN (attempts.score::decimal / attempts.total_questions) * 100
-              ELSE 0
-            END
+          COALESCE(
+            MAX(
+              CASE
+                WHEN attempts.total_questions > 0
+                THEN (attempts.score::decimal / attempts.total_questions) * 100
+                ELSE NULL
+              END
+            ),
+            0
           )
         ) AS best_score
 
       FROM users
 
       LEFT JOIN attempts
-      ON attempts.user_id = users.id
-      AND attempts.status = 'completed'
+        ON attempts.user_id = users.id
+        AND attempts.status = 'completed'
 
       GROUP BY
         users.id,
@@ -45,8 +51,27 @@ export default async function handler(req, res) {
         users.school
 
       ORDER BY
-        best_score DESC NULLS LAST,
-        avg_score DESC NULLS LAST
+        COALESCE(
+          MAX(
+            CASE
+              WHEN attempts.total_questions > 0
+              THEN (attempts.score::decimal / attempts.total_questions) * 100
+              ELSE NULL
+            END
+          ),
+          0
+        ) DESC,
+
+        COALESCE(
+          AVG(
+            CASE
+              WHEN attempts.total_questions > 0
+              THEN (attempts.score::decimal / attempts.total_questions) * 100
+              ELSE NULL
+            END
+          ),
+          0
+        ) DESC
 
       LIMIT 20
     `);
