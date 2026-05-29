@@ -1,5 +1,6 @@
 import bcrypt from "bcryptjs";
 import * as cookie from "cookie";
+import jwt from "jsonwebtoken";
 import { pool } from "../lib/db.js";
 
 export default async function handler(req, res) {
@@ -62,9 +63,15 @@ export default async function handler(req, res) {
         });
       }
 
+      const token = jwt.sign(
+        { id: user.id },
+        process.env.JWT_SECRET,
+        { expiresIn: "7d" }
+      );
+
       res.setHeader(
         "Set-Cookie",
-        cookie.serialize("userId", String(user.id), {
+        cookie.serialize("token", token, {
           httpOnly: true,
           secure: process.env.NODE_ENV === "production",
           sameSite: process.env.NODE_ENV === "production" ? "none" : "lax",
@@ -87,13 +94,25 @@ export default async function handler(req, res) {
         req.headers.cookie || ""
       );
 
-      const userId = cookies.userId;
+      const token = cookies.token;
 
-      if (!userId) {
+      if (!token) {
         return res.status(401).json({
           error: "Unauthorized",
         });
       }
+
+      let decoded;
+
+      try {
+        decoded = jwt.verify(token, process.env.JWT_SECRET);
+      } catch (err) {
+        return res.status(401).json({
+          error: "Invalid token",
+        });
+      }
+
+      const userId = decoded.id;
 
       const result = await pool.query(
         "SELECT id,name,email,role FROM users WHERE id=$1",
@@ -113,7 +132,7 @@ export default async function handler(req, res) {
 
       res.setHeader(
         "Set-Cookie",
-        cookie.serialize("userId", "", {
+        cookie.serialize("token", "", {
           httpOnly: true,
           secure: process.env.NODE_ENV === "production",
           sameSite: process.env.NODE_ENV === "production" ? "none" : "lax",
