@@ -8,8 +8,10 @@ async function api(url, options = {}) {
   try {
 
     const fullUrl = url.startsWith("http")
-      ? url
-      : `${API_BASE_URL}${url}`;
+      ? url.startsWith("/")
+        ? `${API_BASE_URL}${url}`
+        : `${API_BASE_URL}/${url}`
+      : url;
 
     const res = await fetch(fullUrl, {
       method: options.method || "GET",
@@ -79,10 +81,12 @@ async function requireAuth() {
     );
 
     if (res.status === 401) {
+      window.location.href = "/sign-in.html";
       return null;
     }
 
     if (!res.ok) {
+      window.location.href = "/sign-in.html";
       return null;
     }
 
@@ -91,6 +95,8 @@ async function requireAuth() {
   } catch (error) {
 
     console.error("Auth Error:", error);
+
+    window.location.href = "/sign-in.html";
 
     return null;
   }
@@ -296,38 +302,4 @@ function loadingHTML(msg = "Loading...") {
 /* =========================
    GLOBAL AUTH
 ========================= */
-window.requireAuth = async function () {
-
-  try {
-
-    const res = await fetch(
-      `${API_BASE_URL}/api/auth?action=me`,
-      {
-        credentials: "include",
-      }
-    );
-
-    if (res.status === 401) {
-
-      window.location.href =
-        "./sign-in.html";
-
-      return null;
-    }
-
-    if (!res.ok) {
-      return null;
-    }
-
-    return await res.json();
-
-  } catch (err) {
-
-    console.error(err);
-
-    window.location.href =
-      "./sign-in.html";
-
-    return null;
-  }
-};
+window.requireAuth = requireAuth;
