@@ -74,24 +74,7 @@ CREATE TABLE IF NOT EXISTS answers (
   is_correct BOOLEAN
 );
 
--- Seed subjects
-INSERT INTO subjects (name, code) VALUES
-  ('Public Speaking Essentials', 'GEL 102'),
-  ('Mathematics', 'MTH'),
-  ('Physics', 'PHY'),
-  ('Chemistry', 'CHM'),
-  ('Biology', 'BIO'),
-  ('Government', 'GOV'),
-  ('Economics', 'ECO'),
-  ('Literature in English', 'LIT'),
-  ('Geography', 'GEO'),
-  ('Christian Religious Studies', 'CRS'),
-  ('Islamic Religious Studies', 'IRS'),
-  ('Commerce', 'COM'),
-  ('Accounting', 'ACC'),
-  ('Agricultural Science', 'AGR'),
-  ('Computer Studies', 'CST')
-ON CONFLICT (code) DO NOTHING;
+
 
 -- To make a user admin, run AFTER they register:
 -- UPDATE users SET role = 'admin' WHERE email = 'techhub248@gmail.com';

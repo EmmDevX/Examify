@@ -1,31 +1,116 @@
+import jwt from "jsonwebtoken";
 import { pool } from "../lib/db.js";
 
 export default async function handler(req, res) {
 
   try {
 
-    const attempts = await pool.query(
-      "SELECT COUNT(*) FROM attempts"
+    const token = req.cookies?.token;
+
+    if (!token) {
+      return res.status(401).json({
+        error: "Unauthorized"
+      });
+    }
+
+    const decoded = jwt.verify(
+      token,
+      process.env.JWT_SECRET
     );
 
-    const quizzes = await pool.query(
-      "SELECT COUNT(*) FROM quizzes"
+    const userId = decoded.id;
+
+    const totals = await pool.query(
+      `
+      SELECT
+        COUNT(*) AS total_attempts,
+        ROUND(AVG(score), 1) AS avg_score,
+        MAX(score) AS best_score
+      FROM attempts
+      WHERE user_id = $1
+      AND status = 'completed'
+      `,
+      [userId]
     );
 
-    const users = await pool.query(
-      "SELECT COUNT(*) FROM users"
+    const recentAttempts = await pool.query(
+      `
+      SELECT
+        a.id,
+        a.score,
+        a.total_questions,
+        a.completed_at,
+        q.title,
+        s.name AS subject
+      FROM attempts a
+      JOIN quizzes q
+      ON a.quiz_id = q.id
+      LEFT JOIN subjects s
+      ON q.subject_id = s.id
+      WHERE a.user_id = $1
+      AND a.status = 'completed'
+      ORDER BY a.completed_at DESC
+      LIMIT 5
+      `,
+      [userId]
+    );
+
+    const subjectScores = await pool.query(
+      `
+      SELECT
+        s.name AS subject,
+        ROUND(AVG(a.score), 1) AS score
+      FROM attempts a
+      JOIN quizzes q
+      ON a.quiz_id = q.id
+      LEFT JOIN subjects s
+      ON q.subject_id = s.id
+      WHERE a.user_id = $1
+      AND a.status = 'completed'
+      GROUP BY s.name
+      ORDER BY score DESC
+      `,
+      [userId]
+    );
+
+    const streakQuery = await pool.query(
+      `
+      SELECT COUNT(DISTINCT DATE(completed_at)) AS streak
+      FROM attempts
+      WHERE user_id = $1
+      AND completed_at >= NOW() - INTERVAL '7 days'
+      `,
+      [userId]
     );
 
     return res.json({
-      total_attempts: attempts.rows[0].count,
-      total_quizzes: quizzes.rows[0].count,
-      total_users: users.rows[0].count,
+
+      total_attempts:
+        Number(totals.rows[0].total_attempts) || 0,
+
+      avg_score:
+        Number(totals.rows[0].avg_score) || 0,
+
+      best_score:
+        Number(totals.rows[0].best_score) || 0,
+
+      weekly_streak:
+        Number(streakQuery.rows[0].streak) || 0,
+
+      subject_scores:
+        subjectScores.rows || [],
+
+      recent_attempts:
+        recentAttempts.rows || []
+
     });
 
   } catch (err) {
 
+    console.error(err);
+
     return res.status(500).json({
-      error: err.message,
+      error: err.message
     });
   }
 }

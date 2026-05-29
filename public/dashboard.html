@@ -53,11 +53,11 @@
         document.body.classList.add("dark");
       }
 
-      // ⚡ STEP 1: fast auth (no UI blocking)
       let currentUser = null;
 
       (async () => {
         currentUser = await requireAuth();
+
         if (!currentUser) return;
 
         document.getElementById("sidebar").innerHTML = renderSidebar(
@@ -65,13 +65,13 @@
           currentUser.role === "admin"
         );
 
-        // ⚡ STEP 2: render skeleton FIRST (fast UI load)
         document.getElementById("content").innerHTML = `
           <div class="page-header">
             <div>
               <div class="page-title">
                 Welcome back, ${currentUser.name.split(" ")[0]} 👋
               </div>
+
               <div class="page-subtitle">
                 Loading your progress...
               </div>
@@ -91,25 +91,25 @@
           </div>
         `;
 
-        // ⚡ STEP 3: load stats in background (non-blocking)
         requestAnimationFrame(loadDashboardData);
       })();
 
       async function loadDashboardData() {
-        let stats = await api("/api/admin?type=stats");
+
+        let stats = await api("/api/dashboard");
 
         if (!stats) return;
 
         stats.subject_scores = stats.subject_scores || [];
         stats.recent_attempts = stats.recent_attempts || [];
 
-        // ⚡ small delay prevents mobile UI freeze
         setTimeout(() => {
           renderDashboard(stats);
         }, 50);
       }
 
       function renderDashboard(stats) {
+
         document.getElementById("content").innerHTML = `
           <div class="page-header">
 
@@ -143,20 +143,48 @@
           <div class="grid-4" style="margin-bottom:24px">
 
             ${[
-              { label: "Total Attempts", value: stats.total_attempts || 0, color: "var(--primary)" },
-              { label: "Average Score", value: (stats.avg_score || 0) + "%", color: "var(--success)" },
-              { label: "Best Score", value: (stats.best_score || 0) + "%", color: "var(--warning)" },
-              { label: "Weekly Streak", value: stats.weekly_streak || 0, color: "var(--accent)" },
+              {
+                label: "Total Attempts",
+                value: stats.total_attempts || 0,
+                color: "var(--primary)"
+              },
+              {
+                label: "Average Score",
+                value: (stats.avg_score || 0) + "%",
+                color: "var(--success)"
+              },
+              {
+                label: "Best Score",
+                value: (stats.best_score || 0) + "%",
+                color: "var(--warning)"
+              },
+              {
+                label: "Weekly Streak",
+                value: stats.weekly_streak || 0,
+                color: "var(--accent)"
+              },
             ]
               .map(
                 (card) => `
                   <div class="stat-card">
-                    <div style="font-size:12px;color:var(--muted);margin-bottom:10px;text-transform:uppercase;">
+
+                    <div style="
+                      font-size:12px;
+                      color:var(--muted);
+                      margin-bottom:10px;
+                      text-transform:uppercase;
+                    ">
                       ${card.label}
                     </div>
-                    <div style="font-size:34px;font-weight:800;color:${card.color};">
+
+                    <div style="
+                      font-size:34px;
+                      font-weight:800;
+                      color:${card.color};
+                    ">
                       ${card.value}
                     </div>
+
                   </div>
                 `
               )
@@ -167,7 +195,12 @@
           <div class="grid-2">
 
             <div class="card">
-              <div style="font-size:17px;font-weight:700;margin-bottom:18px;">
+
+              <div style="
+                font-size:17px;
+                font-weight:700;
+                margin-bottom:18px;
+              ">
                 Score by Subject
               </div>
 
@@ -175,65 +208,119 @@
                 stats.subject_scores.length
                   ? stats.subject_scores.map(subject => `
                       <div style="margin-bottom:18px">
-                        <div style="display:flex;justify-content:space-between;font-size:13px;margin-bottom:7px;">
-                          <span>${subject.subject}</span>
-                          <span style="font-weight:700;color:var(--primary);">
+
+                        <div style="
+                          display:flex;
+                          justify-content:space-between;
+                          font-size:13px;
+                          margin-bottom:7px;
+                        ">
+
+                          <span>
+                            ${subject.subject}
+                          </span>
+
+                          <span style="
+                            font-weight:700;
+                            color:var(--primary);
+                          ">
                             ${subject.score || 0}%
                           </span>
+
                         </div>
 
                         <div class="progress-bar">
-                          <div class="progress-fill"
+
+                          <div
+                            class="progress-fill"
                             style="width:${subject.score || 0}%;">
                           </div>
+
                         </div>
+
                       </div>
                     `).join("")
-                  : `<div style="text-align:center;padding:40px;color:var(--muted);">
+                  : `
+                    <div style="
+                      text-align:center;
+                      padding:40px;
+                      color:var(--muted);
+                    ">
                       No subject performance yet
-                    </div>`
+                    </div>
+                  `
               }
+
             </div>
 
             <div class="card">
-              <div style="font-size:17px;font-weight:700;margin-bottom:18px;">
+
+              <div style="
+                font-size:17px;
+                font-weight:700;
+                margin-bottom:18px;
+              ">
                 Recent Attempts
               </div>
 
               ${
                 stats.recent_attempts.length
                   ? stats.recent_attempts.map(a => {
-                      const percent = a.total_questions
-                        ? Math.round((a.score / a.total_questions) * 100)
-                        : 0;
+
+                      const percent = Math.round(a.score || 0);
 
                       return `
-                        <div style="display:flex;justify-content:space-between;align-items:center;padding:12px 0;">
+                        <div style="
+                          display:flex;
+                          justify-content:space-between;
+                          align-items:center;
+                          padding:12px 0;
+                        ">
+
                           <div>
-                            <div style="font-size:14px;font-weight:600;">
+
+                            <div style="
+                              font-size:14px;
+                              font-weight:600;
+                            ">
                               ${a.title}
                             </div>
-                            <div style="font-size:12px;color:var(--muted);">
-                              ${a.subject || "General"} • ${new Date(a.completed_at).toLocaleDateString()}
+
+                            <div style="
+                              font-size:12px;
+                              color:var(--muted);
+                            ">
+                              ${a.subject || "General"} •
+                              ${new Date(a.completed_at).toLocaleDateString()}
                             </div>
+
                           </div>
 
-                          <a href="./results.html?attempt=${a.id}"
-                             class="badge ${
-                               percent >= 70
-                                 ? "badge-green"
-                                 : percent >= 40
-                                   ? "badge-yellow"
-                                   : "badge-red"
-                             }">
+                          <a
+                            href="./results.html?attempt=${a.id}"
+                            class="badge ${
+                              percent >= 70
+                                ? "badge-green"
+                                : percent >= 40
+                                  ? "badge-yellow"
+                                  : "badge-red"
+                            }"
+                          >
                             ${percent}%
                           </a>
+
                         </div>
                       `;
                     }).join("")
-                  : `<div style="text-align:center;padding:40px;color:var(--muted);">
+                  : `
+                    <div style="
+                      text-align:center;
+                      padding:40px;
+                      color:var(--muted);
+                    ">
                       No quiz attempts yet
-                    </div>`
+                    </div>
+                  `
               }
 
             </div>
@@ -241,16 +328,27 @@
           </div>
         `;
 
-        // theme toggle stays same
-        document.getElementById("themeToggle").addEventListener("click", () => {
-          document.body.classList.toggle("dark");
+        document
+          .getElementById("themeToggle")
+          .addEventListener("click", () => {
 
-          const dark = document.body.classList.contains("dark");
-          localStorage.setItem("theme", dark ? "dark" : "light");
+            document.body.classList.toggle("dark");
 
-          document.getElementById("themeToggle").textContent =
-            dark ? "Light Mode ☀️" : "Dark Mode 🌙";
-        });
+            const dark =
+              document.body.classList.contains("dark");
+
+            localStorage.setItem(
+              "theme",
+              dark ? "dark" : "light"
+            );
+
+            document.getElementById(
+              "themeToggle"
+            ).textContent =
+              dark
+                ? "Light Mode ☀️"
+                : "Dark Mode 🌙";
+          });
       }
     </script>
   </body>
