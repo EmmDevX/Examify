@@ -6,7 +6,6 @@ module.exports = async function handler(req, res) {
     const { action, id } = req.query;
 
     if (req.method === "POST" && !action) {
-
       const { quiz_id } = req.body;
 
       if (!quiz_id) {
@@ -60,7 +59,6 @@ module.exports = async function handler(req, res) {
     }
 
     if (req.method === "GET" && action === "get") {
-
       const attemptId = id;
 
       const attempt = await pool.query(
@@ -95,7 +93,6 @@ module.exports = async function handler(req, res) {
     }
 
     if (req.method === "POST" && action === "submit") {
-
       const attemptId = id;
       const { answers } = req.body;
 
@@ -119,7 +116,6 @@ module.exports = async function handler(req, res) {
       let correctAnswers = 0;
 
       for (const [qid, opt] of Object.entries(answers)) {
-
         const questionId = Number(qid);
 
         if (!questionId || !opt) continue;
@@ -162,10 +158,11 @@ module.exports = async function handler(req, res) {
       const totalQuestions =
         attempt.rows[0].total_questions || 1;
 
-      const score = Math.round(
+      const percentageScore = Math.round(
         (correctAnswers / totalQuestions) * 100
       );
 
+      // ORIGINAL FIELD (UNCHANGED BEHAVIOR)
       const updated = await pool.query(
         `UPDATE attempts
          SET
@@ -174,8 +171,14 @@ module.exports = async function handler(req, res) {
            completed_at=NOW()
          WHERE id=$2
          RETURNING *`,
-        [score, attemptId]
+        [percentageScore, attemptId]
       );
+
+      // EXTRA SAFE FIELDS (DO NOT BREAK OLD SYSTEMS)
+      updated.rows[0].correct_answers = correctAnswers;
+      updated.rows[0].wrong_answers =
+        totalQuestions - correctAnswers;
+      updated.rows[0].percentage = percentageScore;
 
       return res.json(updated.rows[0]);
     }
@@ -185,7 +188,6 @@ module.exports = async function handler(req, res) {
     });
 
   } catch (err) {
-
     console.error(err);
 
     return res.status(500).json({
