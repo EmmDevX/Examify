@@ -10,6 +10,7 @@
     <link rel="stylesheet" href="./css/dashboard.css" />
     <link rel="stylesheet" href="./css/toogle.css" />
   </head>
+
   <body>
     <button class="mobile-menu-btn" id="menuBtn">☰</button>
     <div class="sidebar-overlay" id="overlay"></div>
@@ -38,7 +39,6 @@
 
       (async () => {
         const user = await requireAuth();
-
         if (!user) return;
 
         document.getElementById("sidebar").innerHTML = renderSidebar(
@@ -60,7 +60,6 @@
 
           if (!attempt) return;
 
-          // SAFE VALUES
           const totalQuestions =
             Number(attempt.total_questions) ||
             Number(attempt.answers?.length) ||
@@ -68,6 +67,7 @@
 
           const score = Number(attempt.score) || 0;
 
+          // FIXED WRONG CALCULATION
           const wrong = Math.max(0, totalQuestions - score);
 
           const pct =
@@ -84,20 +84,22 @@
               ? "var(--warning)"
               : "var(--danger)";
 
-            let dur = "0";
+          let dur = "0";
 
-if (attempt.completed_at && attempt.started_at) {
-  dur = Math.max(
-    1,
-    Math.round(
-      (new Date(attempt.completed_at) -
-        new Date(attempt.started_at)) /
-        60000
-    )
-  );
-}
-console.log(attempt);
-console.log(attempt.answers);
+          if (attempt.completed_at && attempt.started_at) {
+            dur = Math.max(
+              1,
+              Math.round(
+                (new Date(attempt.completed_at) -
+                  new Date(attempt.started_at)) /
+                  60000
+              )
+            );
+          }
+
+          console.log("attempt:", attempt);
+          console.log("answers:", attempt.answers);
+
           document.getElementById("content").innerHTML = `
             <div class="page-header">
               <div>
@@ -199,53 +201,49 @@ console.log(attempt.answers);
                   Answer Review
                 </div>
 
-               ${(attempt.answers || [])
-  .map((a, i) => {
-    const question =
-      a.text ||
-      a.question ||
-      a.question_text ||
-      "Question unavailable";
+                ${(attempt.answers || [])
+                  .map((a, i) => {
+                    const question =
+                      a.text ||
+                      a.question ||
+                      a.question_text ||
+                      "Question unavailable";
 
-    const correct =
-      a.correct_option ||
-      a.correct_answer ||
-      a.correctAnswer ||
-      "N/A";
+                    const correct =
+                      a.correct_option ||
+                      a.correct_answer ||
+                      a.correctAnswer ||
+                      "N/A";
 
-    const selected =
-      a.selected_option ||
-      a.selected_answer ||
-      a.selectedAnswer ||
-      a.user_answer ||
-      "Not Answered";
+                    const selected =
+                      a.selected_option ||
+                      a.selected_answer ||
+                      a.selectedAnswer ||
+                      a.user_answer ||
+                      "Not Answered";
 
-    return `
-      <div style="padding:20px 0;border-bottom:1px solid rgba(42,42,106,0.35)">
-        
-        <div style="font-size:15px;font-weight:600">
-          Q${i + 1}. ${question}
-        </div>
+                    return `
+                      <div style="padding:20px 0;border-bottom:1px solid rgba(42,42,106,0.35)">
+                        <div style="font-size:15px;font-weight:600">
+                          Q${i + 1}. ${question}
+                        </div>
 
-        <div style="margin-top:10px">
-          Correct: <b>${correct}</b> |
-          Your Answer: <b>${selected}</b>
-        </div>
+                        <div style="margin-top:10px">
+                          Correct: <b>${correct}</b> |
+                          Your Answer: <b>${selected}</b>
+                        </div>
 
-        ${
-          a.explanation
-            ? `
-            <div style="margin-top:10px;color:var(--accent)">
-              💡 ${a.explanation}
-            </div>
-          `
-            : ""
-        }
-
-      </div>
-    `;
-  })
-  .join("")}
+                        ${
+                          a.explanation
+                            ? `<div style="margin-top:10px;color:var(--accent)">
+                                💡 ${a.explanation}
+                              </div>`
+                            : ""
+                        }
+                      </div>
+                    `;
+                  })
+                  .join("")}
               </div>
 
             </div>
@@ -260,6 +258,7 @@ console.log(attempt.answers);
 
               localStorage.setItem("theme", isDark ? "dark" : "light");
             });
+
         } catch (e) {
           document.getElementById("content").innerHTML = `
             <div class="card" style="text-align:center;padding:60px">
