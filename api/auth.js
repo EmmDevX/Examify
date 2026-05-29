@@ -7,10 +7,20 @@ export default async function handler(req, res) {
 
   try {
 
-    // REGISTER
     if (action === "register") {
 
       const { name, email, password } = req.body;
+
+      const existing = await pool.query(
+        "SELECT id FROM users WHERE email=$1",
+        [email.toLowerCase()]
+      );
+
+      if (existing.rows.length) {
+        return res.status(409).json({
+          error: "Email already exists",
+        });
+      }
 
       const hash = await bcrypt.hash(password, 10);
 
@@ -24,7 +34,6 @@ export default async function handler(req, res) {
       return res.status(201).json(result.rows[0]);
     }
 
-    // LOGIN
     if (action === "login") {
 
       const { email, password } = req.body;
@@ -57,8 +66,8 @@ export default async function handler(req, res) {
         "Set-Cookie",
         cookie.serialize("userId", String(user.id), {
           httpOnly: true,
-          secure: true,
-          sameSite: "none",
+          secure: process.env.NODE_ENV === "production",
+          sameSite: process.env.NODE_ENV === "production" ? "none" : "lax",
           path: "/",
           maxAge: 60 * 60 * 24 * 7,
         })
@@ -72,7 +81,6 @@ export default async function handler(req, res) {
       });
     }
 
-    // ME
     if (action === "me") {
 
       const cookies = cookie.parse(
@@ -101,15 +109,14 @@ export default async function handler(req, res) {
       return res.json(result.rows[0]);
     }
 
-    // LOGOUT
     if (action === "logout") {
 
       res.setHeader(
         "Set-Cookie",
         cookie.serialize("userId", "", {
           httpOnly: true,
-          secure: true,
-          sameSite: "none",
+          secure: process.env.NODE_ENV === "production",
+          sameSite: process.env.NODE_ENV === "production" ? "none" : "lax",
           path: "/",
           expires: new Date(0),
         })
