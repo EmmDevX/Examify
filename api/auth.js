@@ -7,9 +7,7 @@ export default async function handler(req, res) {
   const action = req.query.action;
 
   try {
-
     if (action === "register") {
-
       const { name, email, password } = req.body;
 
       const existing = await pool.query(
@@ -36,7 +34,6 @@ export default async function handler(req, res) {
     }
 
     if (action === "login") {
-
       const { email, password } = req.body;
 
       const result = await pool.query(
@@ -52,10 +49,7 @@ export default async function handler(req, res) {
 
       const user = result.rows[0];
 
-      const valid = await bcrypt.compare(
-        password,
-        user.password_hash
-      );
+      const valid = await bcrypt.compare(password, user.password_hash);
 
       if (!valid) {
         return res.status(401).json({
@@ -89,11 +83,7 @@ export default async function handler(req, res) {
     }
 
     if (action === "me") {
-
-      const cookies = cookie.parse(
-        req.headers.cookie || ""
-      );
-
+      const cookies = cookie.parse(req.headers.cookie || "");
       const token = cookies.token;
 
       if (!token) {
@@ -102,16 +92,7 @@ export default async function handler(req, res) {
         });
       }
 
-      let decoded;
-
-      try {
-        decoded = jwt.verify(token, process.env.JWT_SECRET);
-      } catch (err) {
-        return res.status(401).json({
-          error: "Invalid token",
-        });
-      }
-
+      const decoded = jwt.verify(token, process.env.JWT_SECRET);
       const userId = decoded.id;
 
       const result = await pool.query(
@@ -129,7 +110,6 @@ export default async function handler(req, res) {
     }
 
     if (action === "logout") {
-
       res.setHeader(
         "Set-Cookie",
         cookie.serialize("token", "", {
@@ -149,9 +129,7 @@ export default async function handler(req, res) {
     return res.status(404).json({
       error: "Invalid action",
     });
-
   } catch (err) {
-
     console.error("AUTH ERROR:", err);
 
     return res.status(500).json({

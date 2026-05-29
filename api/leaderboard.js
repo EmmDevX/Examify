@@ -2,7 +2,6 @@ import { pool } from "../lib/db.js";
 
 export default async function handler(req, res) {
   try {
-
     const result = await pool.query(`
       SELECT
         users.id,
@@ -12,78 +11,45 @@ export default async function handler(req, res) {
 
         COUNT(attempts.id) AS attempts,
 
-        ROUND(
-          COALESCE(
+        COALESCE(
+          ROUND(
             AVG(
               CASE
                 WHEN attempts.total_questions > 0
                 THEN (attempts.score::decimal / attempts.total_questions) * 100
-                ELSE NULL
+                ELSE 0
               END
-            ),
-            0
-          )
-        ) AS avg_score,
+            )
+          ,0),
+        0) AS avg_score,
 
-        ROUND(
-          COALESCE(
+        COALESCE(
+          ROUND(
             MAX(
               CASE
                 WHEN attempts.total_questions > 0
                 THEN (attempts.score::decimal / attempts.total_questions) * 100
-                ELSE NULL
+                ELSE 0
               END
-            ),
-            0
-          )
-        ) AS best_score
+            )
+          ,0),
+        0) AS best_score
 
       FROM users
-
       LEFT JOIN attempts
-        ON attempts.user_id = users.id
-        AND attempts.status = 'completed'
+      ON attempts.user_id = users.id
+      AND attempts.status = 'completed'
 
-      GROUP BY
-        users.id,
-        users.name,
-        users.email,
-        users.school
+      GROUP BY users.id, users.name, users.email, users.school
 
-      ORDER BY
-        COALESCE(
-          MAX(
-            CASE
-              WHEN attempts.total_questions > 0
-              THEN (attempts.score::decimal / attempts.total_questions) * 100
-              ELSE NULL
-            END
-          ),
-          0
-        ) DESC,
-
-        COALESCE(
-          AVG(
-            CASE
-              WHEN attempts.total_questions > 0
-              THEN (attempts.score::decimal / attempts.total_questions) * 100
-              ELSE NULL
-            END
-          ),
-          0
-        ) DESC
+      ORDER BY best_score DESC NULLS LAST, avg_score DESC NULLS LAST
 
       LIMIT 20
     `);
 
     return res.json(result.rows);
-
   } catch (err) {
-
     console.error(err);
-
-    return res.status(500).json({
-      error: err.message,
-    });
+    return res.status(500).json({ error: err.message });
   }
 }
