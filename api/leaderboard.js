@@ -12,14 +12,31 @@ export default async function handler(req, res) {
 
         COUNT(attempts.id) AS attempts,
 
-        ROUND(AVG(attempts.score), 1) AS avg_score,
+        ROUND(
+          AVG(
+            CASE
+              WHEN attempts.total_questions > 0
+              THEN (attempts.score::decimal / attempts.total_questions) * 100
+              ELSE 0
+            END
+          )
+        ) AS avg_score,
 
-        MAX(attempts.score) AS best_score
+        ROUND(
+          MAX(
+            CASE
+              WHEN attempts.total_questions > 0
+              THEN (attempts.score::decimal / attempts.total_questions) * 100
+              ELSE 0
+            END
+          )
+        ) AS best_score
 
       FROM users
 
       LEFT JOIN attempts
       ON attempts.user_id = users.id
+      AND attempts.status = 'completed'
 
       GROUP BY
         users.id,
@@ -28,8 +45,8 @@ export default async function handler(req, res) {
         users.school
 
       ORDER BY
-        MAX(attempts.score) DESC NULLS LAST,
-        AVG(attempts.score) DESC NULLS LAST
+        best_score DESC NULLS LAST,
+        avg_score DESC NULLS LAST
 
       LIMIT 20
     `);

@@ -24,9 +24,37 @@ export default async function handler(req, res) {
       `
       SELECT
         COUNT(*) AS total_attempts,
-        ROUND(AVG(score), 1) AS avg_score,
-        MAX(score) AS best_score
+
+        COALESCE(
+          ROUND(
+            AVG(
+              CASE
+                WHEN total_questions > 0
+                THEN ((score::decimal / total_questions) * 100)
+                ELSE 0
+              END
+            )::numeric,
+            1
+          ),
+          0
+        ) AS avg_score,
+
+        COALESCE(
+          ROUND(
+            MAX(
+              CASE
+                WHEN total_questions > 0
+                THEN ((score::decimal / total_questions) * 100)
+                ELSE 0
+              END
+            )::numeric,
+            1
+          ),
+          0
+        ) AS best_score
+
       FROM attempts
+
       WHERE user_id = $1
       AND status = 'completed'
       `,
@@ -41,15 +69,21 @@ export default async function handler(req, res) {
         a.total_questions,
         a.completed_at,
         q.title,
-        s.name AS subject
+        COALESCE(s.name, 'General') AS subject
+
       FROM attempts a
+
       JOIN quizzes q
       ON a.quiz_id = q.id
+
       LEFT JOIN subjects s
       ON q.subject_id = s.id
+
       WHERE a.user_id = $1
       AND a.status = 'completed'
+
       ORDER BY a.completed_at DESC
+
       LIMIT 5
       `,
       [userId]
@@ -58,16 +92,32 @@ export default async function handler(req, res) {
     const subjectScores = await pool.query(
       `
       SELECT
-        s.name AS subject,
-        ROUND(AVG(a.score), 1) AS score
+        COALESCE(s.name, 'General') AS subject,
+
+        ROUND(
+          AVG(
+            CASE
+              WHEN a.total_questions > 0
+              THEN ((a.score::decimal / a.total_questions) * 100)
+              ELSE 0
+            END
+          )::numeric,
+          1
+        ) AS score
+
       FROM attempts a
+
       JOIN quizzes q
       ON a.quiz_id = q.id
+
       LEFT JOIN subjects s
       ON q.subject_id = s.id
+
       WHERE a.user_id = $1
       AND a.status = 'completed'
+
       GROUP BY s.name
+
       ORDER BY score DESC
       `,
       [userId]
@@ -75,9 +125,13 @@ export default async function handler(req, res) {
 
     const streakQuery = await pool.query(
       `
-      SELECT COUNT(DISTINCT DATE(completed_at)) AS streak
+      SELECT
+        COUNT(DISTINCT DATE(completed_at)) AS streak
+
       FROM attempts
+
       WHERE user_id = $1
+      AND completed_at IS NOT NULL
       AND completed_at >= NOW() - INTERVAL '7 days'
       `,
       [userId]
