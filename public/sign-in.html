@@ -107,11 +107,7 @@
         width: 56px;
         height: 56px;
         border-radius: 18px;
-        background: linear-gradient(
-          135deg,
-          var(--primary),
-          var(--accent)
-        );
+        background: linear-gradient(135deg, var(--primary), var(--accent));
         display: flex;
         align-items: center;
         justify-content: center;
@@ -183,10 +179,6 @@
         transition: 0.25s ease;
       }
 
-      .form-group input::placeholder {
-        color: rgba(255, 255, 255, 0.45);
-      }
-
       .form-group input:focus {
         border-color: var(--primary);
         background: rgba(255, 255, 255, 0.06);
@@ -238,11 +230,7 @@
         height: 56px;
         border: none;
         border-radius: 16px;
-        background: linear-gradient(
-          135deg,
-          var(--primary),
-          var(--primary-hover)
-        );
+        background: linear-gradient(135deg, var(--primary), var(--primary-hover));
         color: white;
         font-size: 15px;
         font-weight: 700;
@@ -272,54 +260,6 @@
         color: var(--primary);
         text-decoration: none;
         font-weight: 700;
-      }
-
-      @media (max-width: 768px) {
-        body {
-          padding: 24px 16px;
-        }
-
-        .auth-wrapper {
-          max-width: 100%;
-        }
-
-        .auth-card {
-          padding: 34px 24px;
-          border-radius: 24px;
-        }
-
-        .auth-title {
-          font-size: 28px;
-        }
-
-        .brand-name {
-          font-size: 22px;
-        }
-      }
-
-      @media (max-width: 480px) {
-        .auth-card {
-          padding: 28px 20px;
-        }
-
-        .auth-title {
-          font-size: 24px;
-        }
-
-        .auth-options {
-          flex-direction: column;
-          align-items: flex-start;
-        }
-
-        .logo-icon {
-          width: 50px;
-          height: 50px;
-          font-size: 20px;
-        }
-
-        .brand-name {
-          font-size: 20px;
-        }
       }
     </style>
   </head>
@@ -353,7 +293,6 @@
                 id="email"
                 placeholder="you@example.com"
                 required
-                autocomplete="email"
               />
             </div>
           </div>
@@ -367,7 +306,6 @@
                 id="password"
                 placeholder="Enter your password"
                 required
-                autocomplete="current-password"
               />
 
               <button
@@ -404,15 +342,15 @@
     <script src="./js/app.js"></script>
 
     <script>
-      fetch("/api/auth?action=me", {
+      const API_BASE = window.location.origin;
+
+      fetch(`${API_BASE}/api/auth?action=me`, {
         credentials: "include",
-      })
-        .then((r) => {
-          if (r.ok) {
-            window.location.href = "./dashboard.html";
-          }
-        })
-        .catch(() => {});
+      }).then((r) => {
+        if (r.ok) {
+          window.location.href = "./dashboard.html";
+        }
+      });
 
       const passwordInput = document.getElementById("password");
       const togglePassword = document.getElementById("togglePassword");
@@ -424,74 +362,53 @@
             : "password";
 
         passwordInput.setAttribute("type", type);
-
-        togglePassword.textContent =
-          type === "password" ? "👁" : "🙈";
+        togglePassword.textContent = type === "password" ? "👁" : "🙈";
       });
 
-      document
-        .getElementById("login-form")
-        .addEventListener("submit", async (e) => {
-          e.preventDefault();
+      document.getElementById("login-form").addEventListener("submit", async (e) => {
+        e.preventDefault();
 
-          const btn = document.getElementById("submit-btn");
-          const errBox = document.getElementById("error-msg");
+        const btn = document.getElementById("submit-btn");
+        const errBox = document.getElementById("error-msg");
 
-          errBox.style.display = "none";
+        errBox.style.display = "none";
+        btn.disabled = true;
 
-          btn.disabled = true;
+        btn.innerHTML = "Logging in...";
 
-          btn.innerHTML = `
-            <span style="display:flex;align-items:center;justify-content:center;gap:10px">
-              <span class="spinner" style="width:18px;height:18px"></span>
-              Logging in...
-            </span>
-          `;
+        try {
+          const res = await fetch(`${API_BASE}/api/auth?action=login`, {
+            method: "POST",
+            credentials: "include",
+            headers: {
+              "Content-Type": "application/json",
+            },
+            body: JSON.stringify({
+              email: document.getElementById("email").value,
+              password: document.getElementById("password").value,
+            }),
+          });
 
-          try {
-            const res = await fetch("/api/auth?action=login", {
-              method: "POST",
-              credentials: "include",
-              headers: {
-                "Content-Type": "application/json",
-              },
-              body: JSON.stringify({
-                email: document.getElementById("email").value,
-                password: document.getElementById("password").value,
-              }),
-            });
+          const data = await res.json();
 
-            const data = await res.json();
-
-            if (!res.ok) {
-              errBox.textContent =
-                data.error || "Login failed. Please try again.";
-
-              errBox.style.display = "block";
-
-              btn.disabled = false;
-              btn.textContent = "Log In";
-
-              return;
-            }
-
-            if (typeof toast === "function") {
-              toast("Login successful!", "success");
-            }
-
-            setTimeout(() => {
-              window.location.href = "./dashboard.html";
-            }, 700);
-          } catch (err) {
-            errBox.textContent =
-              "Could not connect to server.";
-
+          if (!res.ok) {
+            errBox.textContent = data.error || "Login failed";
             errBox.style.display = "block";
-
             btn.disabled = false;
             btn.textContent = "Log In";
+            return;
           }
-        });
+
+          setTimeout(() => {
+            window.location.href = "./dashboard.html";
+          }, 700);
+        } catch (err) {
+          errBox.textContent = "Could not connect to server";
+          errBox.style.display = "block";
+          btn.disabled = false;
+          btn.textContent = "Log In";
+        }
+      });
     </script>
   </body>
 </html>
