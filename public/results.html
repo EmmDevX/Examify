@@ -59,33 +59,32 @@
           );
 
           if (!attempt) return;
-           const totalQuestions =
-  Number(attempt.total_questions) ||
-  Number(attempt.answers?.length) ||
-  0;
 
-/*
-  IMPORTANT:
-  score in DB is already PERCENTAGE (0–100)
-*/
-const pct = Number(attempt.score) || 0;
+          const totalQuestions =
+            Number(attempt.total_questions) ||
+            Number(attempt.answers?.length) ||
+            0;
 
-// convert percentage → correct answers count
-const correct = totalQuestions > 0
-  ? Math.round((pct / 100) * totalQuestions)
-  : 0;
+          // SCORE FIX: backend already stores percentage
+          const pct = Number(attempt.score) || 0;
 
-// derive wrong answers safely
-const wrong = Math.max(0, totalQuestions - correct);
+          // correct answers derived safely
+          const correct =
+            totalQuestions > 0
+              ? Math.round((pct / 100) * totalQuestions)
+              : 0;
 
-const passed = pct >= 50;
+          const wrong = Math.max(0, totalQuestions - correct);
 
-const col =
-  pct >= 60
-    ? "var(--success)"
-    : pct >= 40
-    ? "var(--warning)"
-    : "var(--danger)";
+          const passed = pct >= 50;
+
+          const col =
+            pct >= 60
+              ? "var(--success)"
+              : pct >= 40
+              ? "var(--warning)"
+              : "var(--danger)";
+
           let dur = "0";
 
           if (attempt.completed_at && attempt.started_at) {
@@ -98,9 +97,6 @@ const col =
               )
             );
           }
-
-          console.log("attempt:", attempt);
-          console.log("answers:", attempt.answers);
 
           document.getElementById("content").innerHTML = `
             <div class="page-header">
@@ -151,8 +147,9 @@ const col =
                   ${passed ? "🎉 Passed!" : "📚 Keep Practicing"}
                 </div>
 
+                <!-- FIXED LINE (NO score variable) -->
                 <div style="color:var(--muted);font-size:15px;margin-bottom:24px">
-                  ${correct} correct out of ${totalQuestions}
+                  ${correct} correct out of ${totalQuestions} questions
                 </div>
 
                 <div class="grid-4" style="gap:16px">
@@ -171,7 +168,7 @@ const col =
                       CORRECT
                     </div>
                     <div style="font-size:28px;font-weight:800;color:var(--success)">
-                      ${score}
+                      ${correct}
                     </div>
                   </div>
 
@@ -211,7 +208,7 @@ const col =
                       a.question_text ||
                       "Question unavailable";
 
-                    const correct =
+                    const correctAns =
                       a.correct_option ||
                       a.correct_answer ||
                       a.correctAnswer ||
@@ -231,7 +228,7 @@ const col =
                         </div>
 
                         <div style="margin-top:10px">
-                          Correct: <b>${correct}</b> |
+                          Correct: <b>${correctAns}</b> |
                           Your Answer: <b>${selected}</b>
                         </div>
 
@@ -255,10 +252,12 @@ const col =
             .getElementById("themeToggle")
             .addEventListener("click", () => {
               document.body.classList.toggle("dark");
-
-              const isDark = document.body.classList.contains("dark");
-
-              localStorage.setItem("theme", isDark ? "dark" : "light");
+              localStorage.setItem(
+                "theme",
+                document.body.classList.contains("dark")
+                  ? "dark"
+                  : "light"
+              );
             });
 
         } catch (e) {
